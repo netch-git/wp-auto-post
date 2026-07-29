@@ -2,7 +2,7 @@ name: WordPress Auto Post
 
 on:
   schedule:
-    - cron: '0 23,11 * * *'
+    - cron: '0 2,8 * * *'
   workflow_dispatch:
 
 jobs:
