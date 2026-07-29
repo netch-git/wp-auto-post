@@ -1,12 +1,15 @@
+import json
 import os
 import random
 import requests
 from google import genai
 
+# --- 環境変数 ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-WP_URL = os.environ.get("WP_URL")
+WP_URL = os.environ.get("WP_URL").rstrip('/')
 WP_USER = os.environ.get("WP_USER")
 WP_PASS = os.environ.get("WP_PASS")
+AUTH = (WP_USER, WP_PASS)
 
 THEMES = [
     "小学5年生の算数のよくある問題と回答",
@@ -18,40 +21,93 @@ THEMES = [
 
 theme = random.choice(THEMES)
 
+# 1. GeminiにJSON形式で「本文」と「タグリスト」を出力させるプロンプト
 prompt = f"""
-「{theme}」についてのWordPressブログ記事本文を作成してください。
+「{theme}」についてのWordPressブログ記事本文と、記事に最適なタグを3〜5個生成してください。
+* 読者にわかりやすく丁寧な解説を含めてください。
+* 誰にでも書けるようなありきたりな記事ではなくて、海外事例も含めて可能な限りユニークで科学的に裏付けされた記事を書いてください。
+* いかにもAIが書いたと即時見破られるようなAIしぐさは禁止です。極端な比喩表現などはやめてください。
 
-【出力ルール】
-* 記事のタイトル（h1）から直接開始し、冒頭や末尾に「以下は〜」「〜作成しました」などの挨拶や説明文を一切含めないでください。
-* 見出し（h2, h3）、箇条書き、表などを活用してわかりやすく解説してください。
-* WordPressへ直接投稿できるクリーンなMarkdown形式のみを出力してください。
-* どこにでもあるようなありきたりな内容は絶対に禁止でユニークな事例にしてください。
-* 可能な限り学術的に裏付けされたコンテンツを参照して、引用もリストで末尾に記述してください。
+
+【出力フォーマット】
+以下のJSON形式のみを出力してください（余計な解説文やコードブロック記号 ```json は含めないでください）。
+
+{{
+  "title": "{theme}",
+  "content": "WordPress用のMarkdown本文（h2, h3, 箇条書きを活用）",
+  "tags": ["タグ1", "タグ2", "タグ3"]
+}}
 """
 
 client = genai.Client(api_key=GEMINI_API_KEY)
-
 response = client.models.generate_content(
     model="gemini-3.6-flash",
     contents=prompt,
 )
-article_html = response.text
 
+# 返却されたJSON文字列をパース
+raw_text = response.text.strip()
+if raw_text.startswith("```"):
+    raw_text = raw_text.split("\n", 1)[1].rsplit("\n", 1)[0]  # ```jsonの除去
+
+data = json.loads(raw_text)
+title = data.get("title", theme)
+content = data.get("content", "")
+tag_names = data.get("tags", [])
+
+
+# 2. WordPressでタグ名からタグIDを取得（なければ新規作成）する関数
+def get_or_create_tag_ids(names):
+    tag_ids = []
+    for name in names:
+        name = name.strip()
+        if not name:
+            continue
+
+        # 既存タグの検索
+        res = requests.get(f"{WP_URL}/wp-json/wp/v2/tags", auth=AUTH, params={"search": name})
+        if res.status_code == 200:
+            tags = res.json()
+            # 完全一致する既存タグを探す
+            matched = [t for t in tags if t["name"].lower() == name.lower()]
+            if matched:
+                tag_ids.append(matched[0]["id"])
+                continue
+
+        # 既存タグがない場合は新規作成
+        create_res = requests.post(f"{WP_URL}/wp-json/wp/v2/tags", auth=AUTH, json={"name": name})
+        if create_res.status_code == 201:
+            tag_ids.append(create_res.json()["id"])
+        elif create_res.status_code == 400:
+            # 既存エラー（スラッグ重複等）の場合は検索結果からIDを取得
+            existing_id = create_res.json().get("data", {}).get("term_id")
+            if existing_id:
+                tag_ids.append(existing_id)
+
+    return tag_ids
+
+
+# タグIDの取得処理を実行
+tag_ids = get_or_create_tag_ids(tag_names)
+print(f"生成されたタグ: {tag_names} -> タグID: {tag_ids}")
+
+# 3. 記事の投稿処理（タグIDを付与）
 payload = {
-    "title": theme,
-    "content": article_html,
-    "status": "publish",  # "draft"（下書き）から "publish"（公開）に変更
+    "title": title,
+    "content": content,
+    "status": "draft",  # 自動公開する場合は "publish"
+    "tags": tag_ids,
 }
 
 res = requests.post(
-    f"{WP_URL.rstrip('/')}/wp-json/wp/v2/posts",
-    auth=(WP_USER, WP_PASS),
+    f"{WP_URL}/wp-json/wp/v2/posts",
+    auth=AUTH,
     json=payload,
     timeout=30,
 )
 
 if res.status_code == 201:
-    print(f"成功: {theme} (ID: {res.json().get('id')})")
+    print(f"成功: {title} (ID: {res.json().get('id')})")
 else:
     print(f"エラー: {res.status_code}\n{res.text}")
     raise Exception("WordPress投稿に失敗しました")
