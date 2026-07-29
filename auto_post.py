@@ -1,183 +1,115 @@
-WordPress について
-kaso-Lab
-カスタマイズ
-11件の更新が利用できます
-1,4661,466件のコメントが承認待ちです
-新規
-投稿を編集
-管理メニュー
-こんにちは、mountaincat さん
-コンテンツへスキップ
-カソ研-過疎地ではじめるICT
-kaso-Lab
-小学5年生の算数のよくある問題と回答
-X
-Facebook
-はてブ
-LINE
-コピー
-2026.07.28
-WordPressブログにそのまま貼り付けて使える、装飾用の見出し（h2, h3）や箇条書きを含めた記事本文を作成しました。
+import json
+import os
+import random
+import requests
+from google import genai
+from google.genai import types
 
-通常の問題集にあるような解き方だけでなく、**「シンガポールバーモデル」**や**「アメリカの実践的アプローチ」**などの海外事例を取り入れ、他ブログと差別化できるユニークな構成にしています。
+# --- 環境変数 ---
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+WP_URL = os.environ.get("WP_URL").rstrip('/')
+WP_USER = os.environ.get("WP_USER")
+WP_PASS = os.environ.get("WP_PASS")
+AUTH = (WP_USER, WP_PASS)
 
-—
+THEMES = [
+    "小学5年生の算数のよくある問題と回答",
+    "小学6年生の算数のよくある問題と回答",
+    "中学生でつまずきやすい英語の文法と解説",
+    "小学生向けの理科の面白い実験と解説",
+    "効果的な家庭学習の方法と習慣化のコツ",
+]
 
-# 【小5算数】つまずきやすい難問3選！海外の画期的な解き方で「わからない」をスッキリ解決
+theme = random.choice(THEMES)
 
-小学5年生になると、算数の難易度がガラリと上がり「小5の壁」と呼ばれるほどつまずくお子さんが増えてきます。
+# 1. GeminiにJSON形式で「本文」と「タグリスト」を出力させるプロンプト
+prompt = f"""
+「{theme}」についてのWordPressブログ記事本文と、記事に最適なタグを3〜5個生成してください。
 
-「公式を覚えても、文章題になると解けない…」
-「なぜその計算になるのか親も教えにくい…」
+【厳格な遵守ルール】
+* 読者にわかりやすく丁寧な解説を含めてください。
+* 誰にでも書けるようなありきたりな記事ではなく、海外事例も含めて可能な限りユニークで科学的に裏付けされた記事にしてください。
+* いかにもAIが書いたと即時見破られるようなAIしぐさ（極端な比喩表現等）は禁止です。
+* 本文内に前置きの挨拶、作成報告、注釈、AIの自己言及は一切含めないでください。
 
-そんなお悩みをお持ちではないでしょうか？
+【出力フォーマット】
+以下のJSON形式で出力してください。
+※WordPressに直接投稿するため、contentの中身はマークダウンではなく、必ずHTMLタグ（<h2>, <h3>, <strong>, <ul>, <li>など）を使用して装飾してください。
 
-実は、日本の教科書どおりの解き方だけでなく、**海外（算数教育で有名なシンガポールやアメリカなど）の視点を取り入れると、驚くほど直感的に理解できるようになる**ことがあります。
+{{
+  "title": "{theme}",
+  "content": "WordPress用のHTML本文（前置きなしで直接本文を開始）",
+  "tags": ["タグ1", "タグ2", "タグ3"]
+}}
+"""
 
-この記事では、小5算数の「よくある難問」と基本的な解答に加え、海外事例を活用したユニークでわかりやすい解説をお届けします！
+client = genai.Client(api_key=GEMINI_API_KEY)
+response = client.models.generate_content(
+    model="gemini-3.6-flash",
+    contents=prompt,
+    config=types.GenerateContentConfig(
+        response_mime_type="application/json",
+    ),
+)
 
-—
-
-## 1. 最難関「割合（％）」の問題：シンガポール式「バーモデル」で攻略！
-
-小5算数で最も多くの小学生が苦戦するのが「割合」です。「くらべる数÷もとにする数」という公式に当てはめようとして混乱してしまうのが原因です。
-
-### 【よくある問題】
-> 定価2,000円の服が25%引きで売られています。売値はいくらでしょうか？
-
-### 日本の一般的な解き方
-1. 割引率を求める：$100\% – 25\% = 75\%$（$0.75$）
-2. 計算する：$2,000 \times 0.75 = 1,500$
-3. **答え：1,500円**
-
-「$0.75$をかける理由」がピンとこない子が多く、暗記になりがちです。
-
-### 🌍【海外事例】シンガポール数学の「バーモデル（Bar Model）」
-算数ワールドカップで常に上位のシンガポールでは、公式を使わずに**「視覚的なバー（帯図）」**を描いて解きます。
-
-* **ステップ1**：全体（2,000円）を「100%」の1本のバーで描く。
-* **ステップ2**：25%は「$\frac{1}{4}$」なので、バーを4等分する。
-* **ステップ3**：1ブロックあたりの金額を出す（$2,000 \div 4 = 500$円）。
-* **ステップ4**：25%引き（1ブロック分引き）なので、残り3ブロック分（$500 \times 3 = 1,500$円）。
-
-> **💡ポイント**
-> 「%」を「小数（0.25）」に変換させるのではなく、「図を何等分するか（分数）」として視覚化させることで、割合の苦手意識が一気に吹き飛びます。
-
-—
-
-## 2. 混同しやすい「単位量あたりの大きさ」：アメリカ式「リアルショッピング法」
-
-「どちらの畑が混んでいるか」「どちらの洗剤がお得か」を比べる問題です。計算自体はわり算ですが、どちらをどちらで割るのか（$A \div B$ なのか $B \div A$ なのか）で迷う子が続出します。
-
-### 【よくある問題】
-> A店：500mlのジュースが150円
-> B店：800mlのジュースが200円
-> 1mlあたりの値段をくらべて、どちらがお得か答えましょう。
-
-### 日本の一般的な解き方
-* A店：$150 \div 500 = 0.3$（1mlあたり0.3円）
-* B店：$200 \div 800 = 0.25$（1mlあたり0.25円）
-* **答え：B店の方がお得**
-
-「$150 \div 500$」という「小さな数÷大きな数」の計算で、多くの子が「割れない！」とパニックになります。
-
-### 🌍【海外事例】アメリカの「Unit Rate（単位レート）」と実践的比較
-アメリカの算数（STEAM教育）では、スーパーの「Unit Price（単価表示）」を使って、**より日常生活に即した「キリの良い数字に揃える」アプローチ**を学びます。
-
-あえて「1ml」という小さすぎる単位にせず、**「100mlあたり」**で比較します。
-
-* **A店**：$500\text{ml} \div 5 = 100\text{ml}$。値段も $150 \div 5 = 30$円（100mlあたり30円）
-* **B店**：$800\text{ml} \div 8 = 100\text{ml}$。値段も $200 \div 8 = 25$円（100mlあたり25円）
-
-> **💡ポイント**
-> 「1あたり」にこだわりすぎて小数点の計算でミスをするより、**「100mlあたり」や「100gあたり」という生活感覚に近い数字に変換して比べる**方が、本質的な「比べやすさ」を理解できます。
-
-—
-
-## 3. 「台形の面積」：北欧式「パズル分解」で公式いらず！
-
-小5では「平行四辺形」「三角形」「台形」「ひし形」の面積公式が一気に登場します。
-
-台形の公式 `(上底 + 下底) × 高さ ÷ 2` は、暗記しても「なぜそうなるのか」を忘れがちです。
-
-### 【よくある問題】
-> 上底が4cm、下底が6cm、高さが4cmの台形の面積を求めましょう。
-
-### 日本の一般的な解き方
-公式にそのままあてはめる：
-$(4 + 6) \times 4 \div 2 = 20$
-**答え：$20\text{cm}^2$**
-
-### 🌍【海外事例】フィンランド・探究型（IB）の「パズル分解（Decomposition）」
-北欧などの探究型授業では、**「公式を教える前に、知っている形（長方形や三角形）に切って並び替えさせる」**ことを徹底します。
-
-* **アイデア①：真ん中で横に切る**
-台形を高さの半分（2cm）のところでスパンと横に切り、上のパーツをひっくり返して横に並べると…**大きな平行四辺形**（底辺10cm × 高さ2cm）に変身します！
-* 計算：$(4 + 6) \times 2 = 20\text{cm}^2$
-* **アイデア②：対角線で切る**
-台形に線を1本引いて、2つの「三角形」に分けます。
-* 上の三角形：$4 \times 4 \div 2 = 8$
-* 下の三角形：$6 \times 4 \div 2 = 12$
-* 合算：$8 + 12 = 20\text{cm}^2$
-
-> **💡ポイント**
-> 万が一公式を忘れてしまっても、「知っている形に切り分ければ解ける！」という体験をさせることが、算数的思考力（応用力）を養う国際標準のやり方です。
-
-—
-
-## まとめ：小5算数は「解き方の引き出し」を増やすことが成功の鍵！
-
-小学5年生の算数は、一気に抽象度が高くなり、ただの「計算力」ではなく「概念の理解力」が試されます。
-
-もしお子様が日本の教科書の解説でつまずいている場合は、今回ご紹介したグローバルな視点を試してみてください。
-
-* **割合** ＝ シンガポール式「バーで視覚化」する
-* **単位量** ＝ アメリカ式「100あたりの生活感覚」で捉える
-* **図形** ＝ 北欧式「パズル切り貼り」で公式に頼らない
-
-「あ、こういうことか！」というアハ体験（閃き）があれば、算数は一気に得意科目になりますよ！
-
-—
-*(記事終わり)*
-
-Uncategorized
-シェアする
-X
-Facebook
-はてブ
-LINE
-コピー
-mountaincatをフォローする
- mountaincat
-関連記事
-Uncategorized
-引き算アプリ
-たしざん・ひきざん ゲーム /* Interフォントを読み込みます */ @import url(' /* * 埋め込み時にページのレイアウトを壊さないよう、 * html, body の全画面スタイルを削除しました。 */ /* * bo...
-Uncategorized
-日本市場におけるGoogle One AI Pro契約者向けGemini API活用および自律型AIエージェント実装提案
-Gemini API活用アイデア50選 :root { --color-bg-white: #ffffff; --color-bg-warm: #f6f5f4; --color-text-primary: rgba(0,0,0,0.95);...
-Uncategorized
-書籍ログアプリ
-GoogleBooksで書籍を検索して登録、CSVで出力できるアプリです。読書記録や図書館で借りた本の記録、欲しい本のメモ代わりにどうぞ。 Googleブックス検索 body { font-family: 'Inter', sans-ser...
-Uncategorized
-エンジニアのための最新無料WordPressテーマ：2024-2025年技術ブログ構築ガイド
-エンジニアのための最新無料WordPressテーマ：2024-2025年技術ブログ構築ガイド 1. はじめに (Introduction) 技術ブログの成功は、質の高いコンテンツだけでなく、その情報をいかに効果的に読者に届けるかという点にも...
-Uncategorized
-データ分析の価値を最大化する「次世代の可視化表現」と実践アプローチ
-データ分析の価値を最大化する「次世代の可視化表現」と実践アプローチ /* ブログ記事風の基本スタイル */ body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic...
-Uncategorized
-Plotly.js 全チャートショーケース
-Plotly.js 全チャートショーケース /* 技術ブログ用ベーススタイル */ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "He...
-
-Real Rural Japan: Peaceful Morning Setouchi Waves at Tadanoumi(View of Rabbit Island).
-コメント
-コメントを書き込む
+data = json.loads(response.text)
+title = data.get("title", theme)
+content = data.get("content", "")
+tag_names = data.get("tags", [])
 
 
+# 2. WordPressでタグ名からタグIDを取得（なければ新規作成）する関数
+def get_or_create_tag_ids(names):
+    tag_ids = []
+    for name in names:
+        name = name.strip()
+        if not name:
+            continue
 
-ホームUncategorized
-kaso-Lab
-© 2025 kaso-Lab.
-by Cocoon 本日: 0 週: 0 月: 0 全体: 0
- 編集
- Responsinator Sizzy ScreenResolution
+        # 既存タグの検索
+        res = requests.get(f"{WP_URL}/wp-json/wp/v2/tags", auth=AUTH, params={"search": name})
+        if res.status_code == 200:
+            tags = res.json()
+            # 完全一致する既存タグを探す
+            matched = [t for t in tags if t["name"].lower() == name.lower()]
+            if matched:
+                tag_ids.append(matched[0]["id"])
+                continue
+
+        # 既存タグがない場合は新規作成
+        create_res = requests.post(f"{WP_URL}/wp-json/wp/v2/tags", auth=AUTH, json={"name": name})
+        if create_res.status_code == 201:
+            tag_ids.append(create_res.json()["id"])
+        elif create_res.status_code == 400:
+            # 既存エラー（スラッグ重複等）の場合は検索結果からIDを取得
+            existing_id = create_res.json().get("data", {}).get("term_id")
+            if existing_id:
+                tag_ids.append(existing_id)
+
+    return tag_ids
+
+
+# タグIDの取得処理を実行
+tag_ids = get_or_create_tag_ids(tag_names)
+print(f"生成されたタグ: {tag_names} -> タグID: {tag_ids}")
+
+# 3. 記事の投稿処理（タグIDを付与）
+payload = {
+    "title": title,
+    "content": content,
+    "status": "publish",
+    "tags": tag_ids,
+}
+
+res = requests.post(
+    f"{WP_URL}/wp-json/wp/v2/posts",
+    auth=AUTH,
+    json=payload,
+    timeout=30,
+)
+
+if res.status_code == 201:
+    print(f"成功: {title} (ID: {res.json().get('id')})")
+else:
+    print(f"エラー: {res.status_code}\n{res.text}")
+    raise Exception("WordPress投稿に失敗しました")
