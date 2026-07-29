@@ -40,7 +40,7 @@ article_html = response.text
 payload = {
     "title": theme,
     "content": article_html,
-    "status": "draft",
+    "status": "publish",  # "draft"（下書き）から "publish"（公開）に変更
 }
 
 res = requests.post(
