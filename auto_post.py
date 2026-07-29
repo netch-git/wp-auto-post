@@ -95,7 +95,7 @@ print(f"生成されたタグ: {tag_names} -> タグID: {tag_ids}")
 payload = {
     "title": title,
     "content": content,
-    "status": "draft",  # 自動公開する場合は "publish"
+    "status": "publish",  # ← "publish" に変更すると自動で公開されます
     "tags": tag_ids,
 }
 
