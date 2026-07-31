@@ -66,34 +66,35 @@ prompt = f"""
 2. 導入: 読者の悩みや疑問に寄り添う導入
 3. 本論: 検索で得た事実データや具体例・比較表（<table>や<ul>を活用）
 4. アクションプラン: 今日から試せる具体的な1つのステップ
+
+【出力フォーマット】
+以下のJSON形式のみを出力してください（```json などのコードブロック記号は含めないでください）。
+{{
+  "title": "記事タイトル",
+  "content": "HTML形式の記事本文",
+  "tags": ["タグ1", "タグ2", "タグ3"]
+}}
 """
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-response_schema = {
-    "type": "OBJECT",
-    "properties": {
-        "title": {"type": "STRING"},
-        "content": {"type": "STRING"},
-        "tags": {"type": "ARRAY", "items": {"type": "STRING"}},
-    },
-    "required": ["title", "content", "tags"],
-}
-
-# tools=[{"google_search": {}}] により、GeminiがリアルタイムでWeb検索（Google Search Grounding）を行ってから回答を生成します
 response = client.models.generate_content(
     model="gemini-2.5-flash",
     contents=prompt,
     config=types.GenerateContentConfig(
         system_instruction=system_instruction,
         tools=[{"google_search": {}}],
-        response_mime_type="application/json",
-        response_schema=response_schema,
         temperature=0.7,
     ),
 )
 
-data = json.loads(response.text)
+raw_text = response.text.strip()
+if raw_text.startswith("```"):
+    raw_text = raw_text.split("\n", 1)[1].rsplit("\n", 1)[0]
+    if raw_text.startswith("json"):
+        raw_text = raw_text[4:].strip()
+
+data = json.loads(raw_text)
 title = data.get("title", f"{selected_genre['category']}の最新知見")
 content = data.get("content", "")
 tag_names = data.get("tags", [])
