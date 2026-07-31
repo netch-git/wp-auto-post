@@ -12,72 +12,70 @@ WP_USER = os.environ.get("WP_USER")
 WP_PASS = os.environ.get("WP_PASS")
 AUTH = (WP_USER, WP_PASS)
 
-# 記事クオリティを高める高度なテーマ定義
-THEMES = [
+# 幅広いジャンルと、親しみやすく寄り添う方向性
+GENRES = [
     {
-        "title": "小学5年生の算数でつまずく「割合と平均」：思考力を伸ばす海外のバーモデル学習法",
-        "detail": "日本とシンガポールの算数教育比較、認知心理学に基づく理解の深め方、具体的な解法ステップと保護者の声かけパターン"
+        "category": "生産性・タイムマネジメント",
+        "angle": "無理な頑張りに頼らず、毎日の生活や仕事を少しラクにする優しいヒント",
     },
     {
-        "title": "小学6年生の「速さと比」完全攻略：公式丸暗記から脱却する概念理解のアプローチ",
-        "detail": "速さの概念理解、図解を用いたビジュアル解法、アメリカのSTEM教育で用いられる実生活応用問題の事例"
+        "category": "心理学・人間関係",
+        "angle": "日常のモヤモヤや人間関係の悩みに寄り添い、心が軽くなる視点の切り替え",
     },
     {
-        "title": "中学生が陥る「関係代名詞・不定詞」の壁を打ち破る：第二言語習得論（SLA）に基づく文法講座",
-        "detail": "なぜ日本の英語学習者はここでつまずくのか、チャンクリーディングの導入、脳科学に基づいた記憶の定着メカニズム"
+        "category": "最新テクノロジー・AI活用",
+        "angle": "難しい技術論ではなく、『こんな風に使ってみたら毎日がちょっと楽しくなった』体験談的アプローチ",
     },
     {
-        "title": "家にあるものでできる！小学生向け本格科学実験：仮説検証能力を育む家庭学習ガイド",
-        "detail": "探究学習（Inquiry-based Learning）のフレームワーク、具体的な実験手順、観察シートの作り方と科学的思考を深める問答集"
+        "category": "マーケティング・身近な疑問",
+        "angle": "普段の生活で感じる『これってなんでだろう？』を楽しく読み解く雑学風ストーリー",
     },
     {
-        "title": "科学的に正しい家庭学習の習慣化：行動経済学とWOOP法則でつくる自律学習環境",
-        "detail": "ハビット・スタッキング、作業興奮を引き出す環境デザイン、親の関わり方とモチベーションを維持するフィードバック構造"
-    }
+        "category": "ヘルスケア・睡眠",
+        "angle": "厳しい健康管理ではなく、今日から心地よく取り入れられる小さなセルフケア",
+    },
+    {
+        "category": "教育・学びの工夫",
+        "angle": "『勉強しなさい』と言わずに、自然と知的好奇心が湧いてくる親子で試せるアイデア",
+    },
 ]
 
-selected_theme = random.choice(THEMES)
+selected_genre = random.choice(GENRES)
 
-system_instruction = """あなたは教育科学・認知心理学・比較教育学に精通したプロフェッショナルWeb教育アナリスト兼ライターです。
-読者に圧倒的な価値を提供する専門的かつ読みやすいブログ記事を作成してください。
+system_instruction = """あなたは親しみやすく、温かみのあるWebコラムニストです。
+読者と同じ目線に立ち、寄り添いながら一緒に考えるような、説教くさくないブログ記事を作成してください。
 
-【厳格な禁止・注意事項】
-1. 挨拶、前置き、自己紹介、作成報告（例：「作成しました」「記事の本文です」等）、末尾の解説や注釈は一切禁止です。
-2. 「〜でしょうか？」「〜してみましょう！」といった陳腐で大げさな表現（AIしぐさ）を排除し、信頼できる知的なトーンで記述してください。
-3. 出力する本文（content）はHTML形式（<h2>, <h3>, <p>, <ul>, <li>, <strong>, <table>等）とし、マークダウン記号（**や#）は絶対に使わないでください。
-4. contentの先頭は挨拶なしで、ダイレクトに導入文（<p>）または<h2>見出しから始めてください。
+【執筆ルール】
+1. 挨拶、前置き、自己紹介、作成報告（「〜作成しました」等）、末尾のメタ解説は一切禁止です。
+2. 上から目線の指導や断定（「〜すべき」「〜は間違いです」等）は避け、共感と優しさのある語り口（「〜ですよね」「〜という考え方もあります」「試してみませんか？」）で記述してください。
+3. 専門知識は噛み砕き、読者が「それなら自分にもできそう」「読んで心が軽くなった」と感じられるトーンを意識してください。
+4. 出力はすべてHTML形式（<h2>, <h3>, <p>, <ul>, <li>, <strong>, <table>等）とし、マークダウン記号（**や#）は絶対に使用しないでください。
+5. 本文の先頭は挨拶なしで、ダイレクトに導入文（<p>）または<h2>見出しから始めてください。
 """
 
 prompt = f"""
-テーマ: 「{selected_theme['title']}」
-取り込む要素: {selected_theme['detail']}
+ジャンル: 「{selected_genre['category']}」
+テーマの方向性: 「{selected_genre['angle']}」
 
-上記テーマについて、専門的で非常に価値の高いブログ記事と、関連する検索用タグ（3〜5個）を作成してください。
+上記ジャンルにおいて、読者の悩みに優しく共感し、読んだ後に少しホッとするようなブログ記事と、関連タグ（3〜5個）を生成してください。
 
-【記事構成の指定】
-1. 導入：従来の学習法の問題点と、科学的・論理的な解決アプローチの提示
-2. 理論・海外事例：シンガポール教育、欧米のSTEM教育、認知科学の知見などを取り入れた深い解説
-3. 具体例・実践ステップ：具体的な問題、解法、または具体的なステップバイステップの解説
-4. まとめ：今日から実践できる具体的なアクションプラン
-
-【タグの指定】
-* 簡潔で一般的なキーワード（例：「小学生算数」「家庭学習」「認知科学」「勉強法」など）を3〜5個指定してください。
+【構成ルール】
+1. タイトル: 共感しやすく、親しみやすいタイトル（例：「実は〇〇で大丈夫」「〜を少しラクにするヒント」など）
+2. 導入: 読者が日常で感じる「あるある」や悩みに寄り添う共感文
+3. 本論: 科学的な知見や海外の面白い工夫を、図表（<table>）やリスト（<ul>）を使って優しく解説
+4. アクションプラン: 今日から無理なく試せる、小さな1ステップの提案
 """
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-# 強固なレスポンス構造（JSON Schema）定義
 response_schema = {
     "type": "OBJECT",
     "properties": {
         "title": {"type": "STRING"},
         "content": {"type": "STRING"},
-        "tags": {
-            "type": "ARRAY",
-            "items": {"type": "STRING"}
-        }
+        "tags": {"type": "ARRAY", "items": {"type": "STRING"}},
     },
-    "required": ["title", "content", "tags"]
+    "required": ["title", "content", "tags"],
 }
 
 response = client.models.generate_content(
@@ -87,12 +85,12 @@ response = client.models.generate_content(
         system_instruction=system_instruction,
         response_mime_type="application/json",
         response_schema=response_schema,
-        temperature=0.7
+        temperature=0.7,
     ),
 )
 
 data = json.loads(response.text)
-title = data.get("title", selected_theme["title"])
+title = data.get("title", f"{selected_genre['category']}のヒント")
 content = data.get("content", "")
 tag_names = data.get("tags", [])
 
@@ -108,7 +106,7 @@ def get_or_create_tag_ids(names):
             f"{WP_URL}/wp-json/wp/v2/tags",
             auth=AUTH,
             params={"search": name},
-            timeout=15
+            timeout=15,
         )
         if res.status_code == 200:
             tags = res.json()
@@ -121,7 +119,7 @@ def get_or_create_tag_ids(names):
             f"{WP_URL}/wp-json/wp/v2/tags",
             auth=AUTH,
             json={"name": name},
-            timeout=15
+            timeout=15,
         )
         if create_res.status_code == 201:
             tag_ids.append(create_res.json()["id"])
@@ -135,6 +133,7 @@ def get_or_create_tag_ids(names):
 
 
 tag_ids = get_or_create_tag_ids(tag_names)
+print(f"ジャンル: {selected_genre['category']}")
 print(f"作成・取得したタグID: {tag_ids}")
 
 payload = {
@@ -155,20 +154,23 @@ if post_res.status_code == 201:
     post_data = post_res.json()
     post_id = post_data.get("id")
     current_status = post_data.get("status")
-    print(f"投稿作成成功 ID: {post_id}, ステータス: {current_status}")
+    print(
+        f"投稿成功 ID: {post_id}, タイトル: {title}, ステータス: {current_status}"
+    )
 
-    # 下書き（draft）にとどまった場合の強制公開リクエスト
     if current_status != "publish":
         update_res = requests.post(
             f"{WP_URL}/wp-json/wp/v2/posts/{post_id}",
             auth=AUTH,
             json={"status": "publish"},
-            timeout=30
+            timeout=30,
         )
         if update_res.status_code == 200:
             print("ステータスを publish に強制変更しました。")
         else:
-            print(f"公開ステータス変更エラー: {update_res.status_code} {update_res.text}")
+            print(
+                f"公開ステータス変更エラー: {update_res.status_code} {update_res.text}"
+            )
 else:
     print(f"投稿エラー: {post_res.status_code}\n{post_res.text}")
     raise Exception("WordPress投稿に失敗しました")
