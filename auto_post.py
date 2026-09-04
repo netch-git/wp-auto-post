@@ -91,7 +91,7 @@ response = None
 for attempt in range(3):
     try:
         chat = client.chats.create(
-            model="gemini-2.0-flash",  # クォータ制限がかかりにくい安定枠を指定
+            model="gemini-3.6-flash",  # クォータ制限がかかりにくい安定枠を指定
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,
                 tools=[{"google_search": {}}],
