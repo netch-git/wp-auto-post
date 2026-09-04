@@ -2,9 +2,11 @@ import json
 import os
 import random
 import re
+import time
 import requests
 from google import genai
 from google.genai import types
+from google.genai.errors import ClientError
 
 # --- 環境変数の取得と検証 ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -74,7 +76,7 @@ prompt = f"""
 4. アクションプラン: 今日から試せる具体的な1つのステップ
 
 【出力フォーマット】
-以下のJSON形式のみを出力してください（Markdownコードブロックは含めないでください）。
+以下のJSON形式のみを出力してください。
 {{
   "title": "記事タイトル",
   "content": "HTML形式の記事本文",
@@ -84,25 +86,35 @@ prompt = f"""
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-# 最新モデル gemini-3.8-flash を指定
-response = client.models.generate_content(
-    model="gemini-3.8-flash",
-    contents=prompt,
-    config=types.GenerateContentConfig(
-        system_instruction=system_instruction,
-        tools=[{"google_search": {}}],
-        temperature=0.7,
-    ),
-)
+# 429 回避のためのリトライ処理
+response = None
+for attempt in range(3):
+    try:
+        chat = client.chats.create(
+            model="gemini-2.0-flash",  # クォータ制限がかかりにくい安定枠を指定
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                tools=[{"google_search": {}}],
+                temperature=0.7,
+            ),
+        )
+        response = chat.send_message(prompt)
+        break
+    except ClientError as e:
+        if e.code == 429 and attempt < 2:
+            wait_sec = (attempt + 1) * 20
+            print(f"429 レート制限検知。{wait_sec}秒待機して再試行します...")
+            time.sleep(wait_sec)
+        else:
+            raise e
+
+if not response or not response.text:
+    raise RuntimeError("モデルからのテキスト取得に失敗しました。")
 
 raw_text = response.text.strip()
 
-# JSON文字列の抽出（コードフェンスや不要テキスト混入対策）
 json_match = re.search(r"\{[\s\S]*\}", raw_text)
-if json_match:
-    json_str = json_match.group(0)
-else:
-    json_str = raw_text
+json_str = json_match.group(0) if json_match else raw_text
 
 try:
     data = json.loads(json_str)
@@ -154,7 +166,7 @@ def get_or_create_tag_ids(names):
 
 tag_ids = get_or_create_tag_ids(tag_names)
 print(f"ジャンル: {selected_genre['category']}")
-print(f"作成・取得したタグID: {tag_ids}")
+print(f"タグID: {tag_ids}")
 
 payload = {
     "title": title,
@@ -189,7 +201,7 @@ if post_res.status_code == 201:
             print("ステータスを publish に強制変更しました。")
         else:
             print(
-                f"公開ステータス変更エラー: {update_res.status_code} {update_res.text}"
+                f"ステータス変更エラー: {update_res.status_code} {update_res.text}"
             )
 else:
     print(f"投稿エラー: {post_res.status_code}\n{post_res.text}")
