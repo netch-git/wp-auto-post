@@ -1,18 +1,24 @@
 import json
 import os
 import random
+import re
 import requests
 from google import genai
 from google.genai import types
 
-# --- 環境変数 ---
+# --- 環境変数の取得と検証 ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 WP_URL = os.environ.get("WP_URL", "").rstrip("/")
 WP_USER = os.environ.get("WP_USER")
 WP_PASS = os.environ.get("WP_PASS")
+
+if not all([GEMINI_API_KEY, WP_URL, WP_USER, WP_PASS]):
+    raise ValueError(
+        "必要な環境変数が未設定です (GEMINI_API_KEY, WP_URL, WP_USER, WP_PASS)"
+    )
+
 AUTH = (WP_USER, WP_PASS)
 
-# リサーチ対象となるジャンルと方向性
 GENRES = [
     {
         "category": "生産性・タイムマネジメント",
@@ -68,7 +74,7 @@ prompt = f"""
 4. アクションプラン: 今日から試せる具体的な1つのステップ
 
 【出力フォーマット】
-以下のJSON形式のみを出力してください（```json などのコードブロック記号は含めないでください）。
+以下のJSON形式のみを出力してください（Markdownコードブロックは含めないでください）。
 {{
   "title": "記事タイトル",
   "content": "HTML形式の記事本文",
@@ -78,8 +84,9 @@ prompt = f"""
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# 最新モデル gemini-3.8-flash を指定
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+    model="gemini-3.8-flash",
     contents=prompt,
     config=types.GenerateContentConfig(
         system_instruction=system_instruction,
@@ -89,12 +96,20 @@ response = client.models.generate_content(
 )
 
 raw_text = response.text.strip()
-if raw_text.startswith("```"):
-    raw_text = raw_text.split("\n", 1)[1].rsplit("\n", 1)[0]
-    if raw_text.startswith("json"):
-        raw_text = raw_text[4:].strip()
 
-data = json.loads(raw_text)
+# JSON文字列の抽出（コードフェンスや不要テキスト混入対策）
+json_match = re.search(r"\{[\s\S]*\}", raw_text)
+if json_match:
+    json_str = json_match.group(0)
+else:
+    json_str = raw_text
+
+try:
+    data = json.loads(json_str)
+except json.JSONDecodeError as e:
+    print(f"JSONパースエラー。生レスポンス:\n{raw_text}")
+    raise e
+
 title = data.get("title", f"{selected_genre['category']}の最新知見")
 content = data.get("content", "")
 tag_names = data.get("tags", [])
