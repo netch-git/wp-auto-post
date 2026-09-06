@@ -1,4 +1,4 @@
-!pip install requests
+pip install requests
 
 import html
 import json
