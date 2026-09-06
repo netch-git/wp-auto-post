@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NASA POWER 気象ダッシュボード</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+    }
+    .app-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .control-panel {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .control-group {
+      flex: 1 1 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      font-size: 0.75em;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .control-group select, .control-group input {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.9em;
+      background: #fff;
+    }
+    .btn-fetch {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 0.9em;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-fetch:hover { background: #1d4ed8; }
+    .status-msg {
+      font-size: 0.8em;
+      color: var(--muted);
+      text-align: center;
+      min-height: 1.2em;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .metric-title { font-size: 0.75em; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+    .metric-val { font-size: 1.8em; font-weight: 900; color: var(--text); }
+    .metric-val span { font-size: 0.5em; font-weight: 600; color: var(--muted); }
+    .chart-panel {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .chart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chart-head h3 { font-size: 1.05em; font-weight: 800; }
+    .chart-wrapper { position: relative; height: 320px; width: 100%; }
+    .footer { text-align: right; font-size: 0.75em; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <div class="control-panel">
+    <div class="control-group">
+      <label>対象地点</label>
+      <select id="citySelect">
+        <option value="34.3428,132.9092" selected>広島県 竹原市</option>
+        <option value="34.3853,132.4553">広島県 広島市</option>
+        <option value="35.6762,139.6503">東京都 千代田区</option>
+        <option value="34.6937,135.5023">大阪府 大阪市</option>
+        <option value="43.0618,141.3545">北海道 札幌市</option>
+        <option value="33.5904,130.4017">福岡県 福岡市</option>
+        <option value="26.2124,127.6809">沖縄県 那覇市</option>
+        <option value="custom">自由入力（都市名）...</option>
+      </select>
+    </div>
+
+    <div class="control-group" id="customInputWrap" style="display: none;">
+      <label>都市名入力</label>
+      <input type="text" id="customCityInput" placeholder="例: 京都市, Paris">
+    </div>
+
+    <div class="control-group">
+      <label>表示期間</label>
+      <select id="rangeSelect">
+        <option value="week">直近1週間 (週単位)</option>
+        <option value="month" selected>直近30日間 (月単位)</option>
+        <option value="year">今年 (年初〜最新)</option>
+        <option value="3years">過去3年間 (年次比較)</option>
+      </select>
+    </div>
+
+    <button class="btn-fetch" id="fetchBtn">データを表示</button>
+  </div>
+
+  <div class="status-msg" id="statusMsg"></div>
+
+  <div class="metrics-grid" id="metricsGrid"></div>
+
+  <div class="chart-panel">
+    <div class="chart-head">
+      <h3 id="chartTitle">気象推移</h3>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="mainChart"></canvas>
+    </div>
+  </div>
+
+  <div class="footer" id="footerText">データソース: NASA POWER API (MERRA-2 &amp; GEOS-FP)</div>
+
+</div>
+
+<script>
+let chartInstance = null;
+
+const citySelect = document.getElementById('citySelect');
+const customInputWrap = document.getElementById('customInputWrap');
+const customCityInput = document.getElementById('customCityInput');
+const rangeSelect = document.getElementById('rangeSelect');
+const fetchBtn = document.getElementById('fetchBtn');
+const statusMsg = document.getElementById('statusMsg');
+const metricsGrid = document.getElementById('metricsGrid');
+const chartTitle = document.getElementById('chartTitle');
+const footerText = document.getElementById('footerText');
+
+citySelect.addEventListener('change', () => {
+  customInputWrap.style.display = citySelect.value === 'custom' ? 'flex' : 'none';
+});
+
+function formatYmd(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}${m}${day}`;
+}
+
+async function resolveLocation() {
+  if (citySelect.value !== 'custom') {
+    const [lat, lon] = citySelect.value.split(',');
+    const name = citySelect.options[citySelect.selectedIndex].text;
+    return { lat, lon, name };
+  }
+  const q = customCityInput.value.trim();
+  if (!q) throw new Error('都市名を入力してください。');
+  const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=1&language=ja&format=json`);
+  const data = await res.json();
+  if (!data.results || data.results.length === 0) throw new Error(`「${q}」の座標が見つかりませんでした。`);
+  const r = data.results[0];
+  return { lat: r.latitude.toFixed(4), lon: r.longitude.toFixed(4), name: `${r.name} (${r.country || ''})` };
+}
+
+function getDateRange(mode) {
+  const end = new Date();
+  end.setDate(end.getDate() - 3); // NASA POWER最新確定値
+  const start = new Date(end);
+
+  if (mode === 'week') start.setDate(end.getDate() - 6);
+  else if (mode === 'month') start.setDate(end.getDate() - 29);
+  else if (mode === 'year') start.setMonth(0, 1);
+  else if (mode === '3years') start.setFullYear(end.getFullYear() - 2, 0, 1);
+
+  return { startStr: formatYmd(start), endStr: formatYmd(end) };
+}
+
+async function loadWeather() {
+  statusMsg.style.color = 'var(--muted)';
+  statusMsg.textContent = 'NASA POWER APIからデータを取得中...';
+
+  try {
+    const loc = await resolveLocation();
+    const mode = rangeSelect.value;
+    const { startStr, endStr } = getDateRange(mode);
+
+    const params = 'T2M,T2M_MAX,T2M_MIN,PRECTOTCORR,ALLSKY_SFC_SW_DWN,WS2M';
+    const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=${params}&community=RE&longitude=${loc.lon}&latitude=${loc.lat}&start=${startStr}&end=${endStr}&format=JSON`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`API通信エラー (${res.status})`);
+    const json = await res.json();
+    const p = json.properties.parameter;
+
+    render(p, loc.name, mode, startStr, endStr);
+    statusMsg.textContent = '';
+  } catch (err) {
+    statusMsg.style.color = '#dc2626';
+    statusMsg.textContent = err.message;
+  }
+}
+
+function render(p, locName, mode, startStr, endStr) {
+  const dates = Object.keys(p.T2M).sort();
+  const clean = v => (v === -999 || v === -9999 || v === null ? null : v);
+
+  const labels = [];
+  const tAvg = [], tMax = [], tMin = [], rain = [];
+
+  dates.forEach(d => {
+    labels.push(`${d.slice(4,6)}/${d.slice(6,8)}`);
+    tAvg.push(clean(p.T2M[d]));
+    tMax.push(clean(p.T2M_MAX[d]));
+    tMin.push(clean(p.T2M_MIN[d]));
+    rain.push(clean(p.PRECTOTCORR[d]) || 0);
+  });
+
+  const validTemps = tAvg.filter(v => v !== null);
+  const avgTemp = validTemps.length ? (validTemps.reduce((a,b)=>a+b,0) / validTemps.length).toFixed(1) : '-';
+  const totalRain = rain.reduce((a,b)=>a+b,0).toFixed(1);
+  const maxRain = rain.length ? Math.max(...rain).toFixed(1) : '-';
+
+  metricsGrid.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-title">期間平均気温</div>
+      <div class="metric-val">${avgTemp}<span> ℃</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">合計降水量</div>
+      <div class="metric-val" style="color: #2563eb;">${totalRain}<span> mm</span></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-title">1日最大降水量</div>
+      <div class="metric-val" style="color: #0284c7;">${maxRain}<span> mm</span></div>
+    </div>
+  `;
+
+  chartTitle.textContent = `${locName} の気象推移 (${startStr.slice(0,4)}/${startStr.slice(4,6)}/${startStr.slice(6,8)} 〜 ${endStr.slice(0,4)}/${endStr.slice(4,6)}/${endStr.slice(6,8)})`;
+
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const isDense = dates.length > 60;
+
+  chartInstance = new Chart(ctx, {
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          type: 'line',
+          label: '最高気温(℃)',
+          data: tMax,
+          borderColor: '#dc2626',
+          borderWidth: 1.5,
+          pointRadius: isDense ? 0 : 2,
+          tension: 0.2
+        },
+        {
+          type: 'line',
+          label: '平均気温(℃)',
+          data: tAvg,
+          borderColor: '#f97316',
+          backgroundColor: 'rgba(249, 115, 22, 0.1)',
+          fill: true,
+          borderWidth: 2,
+          pointRadius: isDense ? 0 : 3,
+          tension: 0.2
+        },
+        {
+          type: 'line',
+          label: '最低気温(℃)',
+          data: tMin,
+          borderColor: '#2563eb',
+          borderWidth: 1.5,
+          pointRadius: isDense ? 0 : 2,
+          tension: 0.2
+        },
+        {
+          type: 'bar',
+          label: '降水量(mm)',
+          data: rain,
+          backgroundColor: 'rgba(59, 130, 246, 0.5)',
+          yAxisID: 'yRain'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: {
+          position: 'left',
+          title: { display: true, text: '気温 (℃)' },
+          grid: { color: '#f1f5f9' }
+        },
+        yRain: {
+          position: 'right',
+          title: { display: true, text: '降水量 (mm)' },
+          grid: { display: false },
+          min: 0
+        },
+        x: {
+          grid: { display: false },
+          ticks: { maxTicksLimit: 12 }
+        }
+      }
+    }
+  });
+
+  footerText.textContent = `地点: ${locName} | データソース: NASA POWER (MERRA-2 & GEOS-FP)`;
+}
+
+fetchBtn.addEventListener('click', loadWeather);
+rangeSelect.addEventListener('change', loadWeather);
+citySelect.addEventListener('change', () => {
+  if (citySelect.value !== 'custom') loadWeather();
+});
+
+loadWeather();
+</script>
+</body>
+</html>
