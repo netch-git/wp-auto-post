@@ -1,11 +1,20 @@
-pip install requests
-
+import os
 import html
 import json
 import requests
 from datetime import datetime
-from IPython.display import display, HTML
 
+# --- 環境設定 ---
+WP_URL = os.environ.get("WP_URL", "").rstrip("/")
+WP_USER = os.environ.get("WP_USER")
+WP_PASS = os.environ.get("WP_PASS")
+
+if not all([WP_URL, WP_USER, WP_PASS]):
+    raise ValueError("必要な環境変数 (WP_URL, WP_USER, WP_PASS) が未設定です")
+
+AUTH = (WP_USER, WP_PASS)
+
+# 対象地域：広島県竹原市
 LOCATION_NAME = "広島県竹原市"
 LATITUDE = 34.3428
 LONGITUDE = 132.9092
@@ -149,7 +158,6 @@ def build_interactive_dashboard_html(data):
 
     chart_data_json = json.dumps(data["chart_datasets"])
 
-    # iframe内部に完全なHTML・CSS・JSを構築
     raw_inner_html = f"""<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -505,17 +513,35 @@ def build_interactive_dashboard_html(data):
 </body>
 </html>"""
 
-    # WordPress用：iframeのsrcdocとして埋め込む（HTML特殊文字をエスケープ）
     escaped_srcdoc = html.escape(raw_inner_html, quote=True)
     embed_iframe = f'<iframe srcdoc="{escaped_srcdoc}" style="width: 100%; min-height: 840px; border: none; border-radius: 16px; overflow: hidden;" loading="lazy"></iframe>'
     return embed_iframe
 
-# --- 実行・表示確認 ---
-current_year = datetime.now().year
-start_year = current_year - 3
-end_year = current_year - 1
+def main():
+    current_year = datetime.now().year
+    start_year = current_year - 3
+    end_year = current_year - 1
 
-data = fetch_weather_dashboard_data(LATITUDE, LONGITUDE, start_year, end_year)
-iframe_html = build_interactive_dashboard_html(data)
+    print(f"NASA POWERから {LOCATION_NAME} の気象データを取得中 ({start_year}〜{end_year})...")
+    data = fetch_weather_dashboard_data(LATITUDE, LONGITUDE, start_year, end_year)
 
-display(HTML(iframe_html))
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    title = f"【気象ダッシュボード】{LOCATION_NAME} ({today_str} 更新)"
+    content_html = build_interactive_dashboard_html(data)
+
+    endpoint = f"{WP_URL}/wp-json/wp/v2/posts"
+    payload = {
+        "title": title,
+        "content": content_html,
+        "status": "publish"
+    }
+
+    print("WordPressへ投稿中...")
+    res = requests.post(endpoint, json=payload, auth=AUTH, timeout=20)
+    if res.status_code not in (200, 201):
+        raise RuntimeError(f"WordPress投稿失敗 ({res.status_code}): {res.text}")
+
+    print("投稿成功:", res.json().get("link"))
+
+if __name__ == "__main__":
+    main()
