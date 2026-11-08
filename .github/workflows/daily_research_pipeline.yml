@@ -1,0 +1,112 @@
+name: Daily Research & Eyecatch Pipeline
+
+on:
+  schedule:
+    # 毎日 午前2:00 JST (UTC 17:00) : パートA（デジタル資産マネタイズ調査）
+    - cron: '0 17 * * *'
+    # 毎日 午前3:30 JST (UTC 18:30) : パートB（海外の高度GAS事例調査）
+    - cron: '30 18 * * *'
+    # 毎日 午前4:00 JST (UTC 19:00) : パートC（Gemini 4 / Antigravity / AI Studio調査）
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+    inputs:
+      part:
+        description: 'Task part to run'
+        required: true
+        default: 'ALL'
+        type: choice
+        options:
+          - ALL
+          - A
+          - B
+          - C
+      date:
+        description: 'Target date (YYYY-MM-DD, optional defaults to JST date)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-genai requests pillow google-auth google-api-python-client
+
+      - name: Determine execution target
+        id: determine_target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            SELECTED_PART="${{ inputs.part }}"
+            SPECIFIC_DATE="${{ inputs.date }}"
+          else
+            CRON="${{ github.event.schedule }}"
+            case "$CRON" in
+              "0 17 * * *")
+                SELECTED_PART="A"
+                ;;
+              "30 18 * * *")
+                SELECTED_PART="B"
+                ;;
+              "0 19 * * *")
+                SELECTED_PART="C"
+                ;;
+              *)
+                SELECTED_PART="ALL"
+                ;;
+            esac
+            SPECIFIC_DATE=""
+          fi
+          echo "part=${SELECTED_PART}" >> $GITHUB_OUTPUT
+          echo "date=${SPECIFIC_DATE}" >> $GITHUB_OUTPUT
+
+      - name: Run Daily Task Runner
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          GAS_UPLOAD_URL: ${{ secrets.GAS_UPLOAD_URL }}
+          GAS_UPLOAD_TOKEN: ${{ secrets.GAS_UPLOAD_TOKEN }}
+        run: |
+          PART="${{ steps.determine_target.outputs.part }}"
+          DATE_VAL="${{ steps.determine_target.outputs.date }}"
+          CMD="python scripts/daily_task_runner.py --part ${PART}"
+          if [ -n "${DATE_VAL}" ]; then
+            CMD="${CMD} --date ${DATE_VAL}"
+          fi
+          echo "Executing: ${CMD}"
+          eval ${CMD}
+
+      - name: Commit and push generated reports
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add reports/
+          if git diff --staged --quiet; then
+            echo "No report changes to commit."
+          else
+            git commit -m "chore(daily): auto-generated research reports and eyecatches [skip ci]"
+            git push
+          fi
+
+      - name: Upload Workflow Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reports-${{ github.run_id }}
+          path: reports/daily/
+          if-no-files-found: ignore
