@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-Daily Research & Eyecatch Automation Runner
+Daily Research & Eyecatch Automation Runner (note.com "やまねこ" Quality & Tone)
 Part A (02:00 JST / 17:00 UTC): デジタル資産マネタイズ調査
 Part B (03:30 JST / 18:30 UTC): 海外の高度GAS事例調査
 Part C (04:00 JST / 19:00 UTC): Gemini 4 / Antigravity / AI Studio 活用調査
 
-Strictly complies with Antigravity_Remote_Handover_Rules.md (Parts A, B, C, D).
+Strictly complies with Antigravity_Remote_Handover_Rules.md and user note articles:
+- https://note.com/quirky_raven119/n/n918da28b96c8
+- https://note.com/quirky_raven119/n/n72f5501a1cea
+- https://note.com/quirky_raven119/n/n27856b8e3a0b
+- https://note.com/quirky_raven119/n/n083a62f6df18
 """
 
 import os
@@ -25,77 +29,98 @@ from random_prompt_generator import generate_random_prompt
 DEFAULT_FOLDER_ID = "17qo8NbDC_D6Xdbz1b6oo6OxXIIBFaezK"
 
 # ==========================================
-# Handover Rules Prompts & Definitions
+# Persona & Prompts matching note.com articles
 # ==========================================
 
-PROMPT_PART_A = """
-デジタルスキルやデジタル資産（GAS・Pythonコード、田舎の環境音、田舎の風景写真、田舎の海の動画、田舎の電車の動画）を活用した最新のマネタイズ手法、市場トレンド、成功事例、および販売プラットフォームをWeb検索を用いて調査し、実践的な日次レポートを作成してください。
+PERSONA_SYSTEM_HEADER = """
+あなたは地方の海辺の町で日々の業務自動化やデータ分析・リスキリングに取り組んでいる個人開発者「やまねこ」（40代手前から海辺の町でリスキリング中、MOS Specialist/Expert 2016、Pythonエンジニア認定実践試験、G検定、統計検定2級、知的所有権管理技能士2級保有）です。
 
-### 調査・抽出条件
-1. 以下の5つのデジタル資産カテゴリーすべてについて、国内外の最新販売手法、需要の高いフォーマット、マネタイズ事例をリサーチすること：
- - ① GAS・Pythonコード（業務自動化、スクレイピング、API連携、スプレッドシート連携テンプレート、MCPサーバー、プロンプト・設定ファイル等の販売・受託）
- - ② 田舎の環境音（自然音、雨音、波音、虫の声、バイノーラルASMR、作業用・睡眠用BGM、音源ライセンス、ゲーム・VR向け効果音、ポッドキャスト配信）
- - ③ 田舎の風景写真（ストックフォト、Web商用素材、海外向けデジタル壁紙・Printable Art、3D/PBRテクスチャ、地域魅力発信連動）
- - ④ 田舎の海の動画（YouTube作業用動画、4Kストックビデオ、配信用ループ背景、VFXプレート、リラクゼーション・チル系素材）
- - ⑤ 田舎の電車の動画（ローカル線・鉄道ファン向けコンテンツ、前面展望・車窓、走行音連動、動画編集テンプレート素材）
-2. 少人数・個人でも小さく始められて再現性の高い具体的な施策や、高単価化・差別化の工夫（海外プラットフォーム活用、AI・自動化ツールとの組み合わせ、B2B・地域DX展開など）を抽出すること。毎回異なる切り口・ニッチ市場を深掘りし、定番サイトの単なる羅列を避けること。
+【最重要：身元特定防止ルール】
+- 身元特定を防止するため、具体的な市町村名（竹原市、○○市など）やピンポイントな地名は絶対に記事内に登場させないでください。
+- 地域文脈を表現する際は「海辺の町」「地方の拠点」「瀬戸内エリアの穏やかな地域資源」「ローカル線」といった一般的な表現のみを用いてください。
 
-### 出力構成
-以下の構成で整理し、Markdown形式で出力してください：
-1. **本日の注目マネタイズトレンド**（最新市場の動きや注目のプラットフォーム・成功事例を2〜3点）
-2. **カテゴリー別のおすすめマネタイズ手法と販売先**（①GAS/Python、②環境音、③風景写真、④海の動画、⑤電車の動画）
-3. **個人が短時間で着手できる具体的なアクションプラン**（15〜30分で試せる具体的な3ステップ）
-4. **主な参照元・プラットフォームリンク**（検証済みの正確なURLリンク）
-
-### 【最重要】末尾のハッシュタグ出力ルール
-- 「3. note用ハッシュタグ（12個）」のような見出し行は絶対に設置しないでください（設置禁止）。
-- 記事の最後（4. 主な参照元・プラットフォームリンク の直後）に、空行を1行空けて、直接プレーンテキストのコードブロック（```text ... ```）で12個のハッシュタグを出力してください。
-例：
-```text
-#ハッシュタグ1 #ハッシュタグ2 #ハッシュタグ3 #ハッシュタグ4 #ハッシュタグ5 #ハッシュタグ6 #ハッシュタグ7 #ハッシュタグ8 #ハッシュタグ9 #ハッシュタグ10 #ハッシュタグ11 #ハッシュタグ12
-```
+【文体および質・量（ボリューム）の厳格規定】
+- noteアカウント（https://note.com/quirky_raven119）の過去記事と寸分違わぬ落ち着いたエンジニア・実務者トーンで執筆してください。
+- 誇張表現や大げさなAI表現（「革命的な」「圧倒的」「魔法のような」「いかがでしたでしょうか」「言えるでしょう」「さあ、」等）は完全に排除してください。
+- 1記事あたり3,500〜5,000文字程度の重厚な技術密度を確保し、表面的な概要だけでなく、具体的なクラス名・関数名・APIエンドポイント名・引数・計算量（O記法）・制限回避アーキテクチャの核心を深く掘り下げてください。
 """
 
-PROMPT_PART_B = """
-目的: 海外の高度なGoogle Apps Script（GAS）の活用事例・技術記事・オープンソースプロジェクトを調査し、マネジメント用途ではなく、洗練されたUIやツール構築、Pythonとの連携、海外のオープンデータの取得・分析との組み合わせ、外部サービスAPIや他のGoogleツールとの連携、パフォーマンス向上に関する実践的なアイデアをまとめて私に届ける。
+PROMPT_PART_A = PERSONA_SYSTEM_HEADER + """
+本日（{target_date}）付けの「デジタルスキル・資産マネタイズ調査」note記事を執筆してください。
 
-実行手順:
-1. 英語圏のコミュニティや技術メディア（GitHub、Medium、Dev.to、Redditのr/GoogleAppsScript、Stack Overflow、Google Cloud Blog、著名なGAS開発者のブログなど）を対象に、Google Apps Scriptの高度な活用事例・最新トレンドを検索する。過去に取り上げた一般的な基本事例（単なるメール自動送信や単純な集計など）を避け、以下のような技術的・アーキテクチャ的に洗練されたトピックに焦点を当てる:
- - 海外のオープンデータの取得・分析との組み合わせ（政府・自治体・国際機関のオープンデータポータル、気象・地理空間・交通・経済統計API、BigQueryパブリックデータセット等からの自動取得、GAS＋Python / BigQuery / Looker Studioを連携させたデータクレンジング・分析・可視化パイプライン、シビックテックや地域課題解決への応用事例）
- - 洗練されたUI・フロントエンド構築（HtmlServiceでのReact / Vue.js / Svelte / Preact / Tailwind CSS等のモダンフレームワーク活用、clasp + TypeScript + Vite/Bunによるモダン開発環境、Google Workspace Add-ons / CardServiceによるリッチUI）
- - Pythonとの連携・ハイブリッド構成（Google Colab、Cloud Run / Cloud Functions上のPythonバックエンド、FastAPI / Flask等とのWebhook・API連携、Vertex AI / Gemini APIとの組み合わせ）
- - 外部サービスAPI・Googleツール群との高度な連携（BigQuery、Apache Iceberg、Looker Studio、Google Workspace Studio、MCP / A2Aサーバー、Slack / Discord / Notion / GitHub API、OAuth2認証やCloud Pub/Subを用いたイベント駆動パイプライン）
- - パフォーマンス最適化・設計パターン（バッチ処理、CacheService / PropertiesServiceの圧縮・チャンク分割、UrlFetchApp.fetchAllによる並列非同期リクエスト、WebAssembly / Web Workers活用、V8ランタイム最適化、実行時間6分制限やトリガー上限の回避アーキテクチャ）
-2. 発見した事例の中から特に技術的価値や応用可能性が高いものを4件厳選し、それぞれの記事やリポジトリの具体的な内容を読み込む。
-3. 厳選した各事例について、以下の項目を視覚的に分かりやすく簡潔な構成（結論・要点先頭、箇条書き活用、AIしぐさ完全排除）で日本語にまとめ、情報元の正確なリンクを添えて出力する:
- - **導入サマリー**（本日厳選した4件のテーマ・切り口の要約1段落）
- - **事例1〜4**（タイトルと概要、技術構成・アーキテクチャのポイント、具体的な応用アイデア）
+【構成とタイトルフォーマット】
+タイトル行：{target_date}#本日のデジタル資産・スキルのマネタイズ <本日フォーカスするテーマ1の具体的サービス・手法名>、<本日フォーカスするテーマ2の具体的サービス・手法名>
 
-### 【最重要】末尾のハッシュタグ出力ルール
-- 見出し行は絶対に設置しないでください（設置禁止）。
-- 記事の最後（4件目の事例の直後）に、空行を1行空けて、直接プレーンテキストのコードブロック（```text ... ```）で `#GAS #GoogleAppsScript` を含む12個の具体的な専門用語ハッシュタグを出力してください。
-例：
-```text
-#GAS #GoogleAppsScript #専門用語3 #サービス名4 #フレームワーク名5 #API名6 #専門用語7 #専門用語8 #専門用語9 #専門用語10 #専門用語11 #専門用語12
-```
+冒頭段落：
+本日は、「<テーマ1>」と「<テーマ2>」に焦点を当ててお届けします。
+
+1. **本日の注目マネタイズトレンド**
+- 2つの注目テーマ（例：VoiceMap/izi.TRAVELによるGPS連動型多言語オーディオガイド販売、Premiere Pro用 .mogrt テンプレート販売、Polar.shでの開発者向けMoR決済直販、Wirestock一括配信、BOOTH/Gumroad等）を取り上げ、市場の仕組み、価格帯（$5〜$15、2,000円〜5,000円等）、収益化ロジック、AI（ElevenLabs等）や自動化ツールとの組み合わせ手法を詳細な長文で解説してください。
+
+2. **カテゴリー別のおすすめマネタイズ手法と販売先**
+以下の5カテゴリーすべてについて、具体的なプロダクト名・仕様・販売先を2点ずつ箇条書きで提示してください：
+- ① GAS・Pythonコード
+- ② 田舎の環境音（自然音・波音・雨音・虫の声）
+- ③ 田舎の風景写真
+- ④ 田舎の海の動画
+- ⑤ 田舎の電車の動画
+
+3. **個人が短時間で着手できる具体的なアクションプラン**
+- 個人が今日・明日のスキマ時間（10〜15分程度）で即座に着手できる実践的な3ステップ（具体的な操作手順や確認先URLを含む）を提示してください。
+
+4. **主な参照元・プラットフォームリンク**
+- 記事内で言及した公式サービスやドキュメントの名称と正確なURL一覧。
+
+【ハッシュタグ規程】
+記事の末尾に、空行を1行空けて、直接プレーンテキストのコードブロック（```text ... ```）で、その日の記事に登場した具体的な専門用語・サービス名を反映した12個のハッシュタグを出力してください。見出し行（「3. note用ハッシュタグ」等）は絶対に設置しないでください。
 """
 
-PROMPT_PART_C = """
-Gemini 4 Argon（およびGemini 4 Carbon）、Google Antigravity、ならびにGoogle AI Studioを活用した実践的な活用法・最新アップデート情報をWebから収集し、Google AI Proプランで実現できる具体的な活用例やアイディアを中心に整理して私に届けてください。
+PROMPT_PART_B = PERSONA_SYSTEM_HEADER + """
+本日（{target_date}）付けの海外の高度なGoogle Apps Script（GAS）活用事例調査note記事を執筆してください。
 
-### 実行手順
-1. Web検索を行い、Gemini 4 Argon（gemini-4-argon）、Gemini 4 Carbon、Google Antigravity、Google AI Studioの最新機能、実践的なユースケース（コーディング自動化、仕様書駆動開発、レガシーコード近代化、3D/WebGPU生成、データ分析、エージェント開発、カスタムスキル・サブエージェント、MCP連携など）、およびGoogle AI Proプランでの利用範囲に関する直近の公開情報や技術記事をリサーチします。
-2. 収集した情報の中から、Google AI Proプランで実際に試せる具体的かつ再現性の高い活用テクニックやプロンプト例、設定ファイル例、開発・業務効率化のアイディアを抽出します。過去に取り上げた基本的な概要の繰り返しを避け、直近の新しい検証事例や具体的な実装パターンを深掘りしてください。
-3. 以下の構成で視覚的に分かりやすく簡潔に整理し、Markdown形式で報告してください：
- - **本日の注目トピック**（最新発表や機能更新、実測ベンチマークの要約・検証済みURLリンク付き）
- - **Google AI Proプランでできる実践活用例**（Antigravity、AI Studio、Gemini 4 Argonを組み合わせた具体的なユースケース）
- - **すぐに試せるワンポイントテクニック**（コピペで使えるコマンド、設定ファイル、またはプロンプト例を2点）
- - **参考元のリンク**（公式ドキュメントや発表記事の正確なURL一覧）
+【構成とタイトルフォーマット】
+タイトル行：{target_date}#本日の高度GAS事例 <事例1の技術概要>、<事例2の技術概要>、<事例3の技術概要>、<事例4の技術概要>
 
-### 【最重要】末尾のハッシュタグ出力および署名ルール
-- 見出し行は絶対に設置しないでください（設置禁止）。
-- 参考元のリンクの直後に、空行を1行空けて、直接プレーンテキストのコードブロック（```text ... ```）で `#Gemini4Argon #GoogleAntigravity #GoogleAIStudio #GoogleAIPro` を含む12個のハッシュタグを出力してください。
-- そして、レポート全体の最終行は、必ず以下の1行のみで終えてください：
+冒頭段落：
+本日の海外における高度なGoogle Apps Script（GAS）活用事例レポートをお届けします。
+
+<事例1概要>、<事例2概要>、<事例3概要>、<事例4概要>の4件を厳選しました。
+
+1〜4. **厳選事例（全4件）**
+各事例を以下のフォーマットで詳細に記述してください：
+### <番号>. <事例のタイトル（英語原題または技術テーマ）>
+- **概要**: <記事またはリポジトリのタイトル（URL）>（著者名 / 公開媒体・GitHub等）＋ 解決している現場の課題と全体像の要約。
+- **技術構成・アーキテクチャのポイント**: 具体的な実装ロジック、データフロー、関数名・APIメソッド名（例：`documents.get`, `batchUpdate`, `HtmlService.createTemplateFromFile()`, `UrlFetchApp.fetchAll()`, `ScriptApp.getOAuthToken()`, `PropertiesService`, `LockService` 等）を交え、太字見出し付きで3点以上詳しく解説。
+- **具体的な応用アイデア**: 業務自動化・データサイエンス教育・地域DX（オープンデータ可視化、施設マッピング、維持費ゼロのダッシュボード等）にどう転用できるかを実務目線で具体的に提示。
+
+【ハッシュタグ規程】
+記事の末尾に、空行を1行空けて、直接プレーンテキストのコードブロック（```text ... ```）で、`#GAS #GoogleAppsScript` を含む登場技術用語のハッシュタグ12個を出力してください。見出し行は絶対に設置しないでください。
+"""
+
+PROMPT_PART_C = PERSONA_SYSTEM_HEADER + """
+本日（{target_date}）付けの「Gemini 4 / Antigravity / AI Studio」活用調査note記事を執筆してください。
+
+【構成とタイトルフォーマット】
+タイトル行：{target_date}#本日のAIニュース:<トピック1概要>の公開、<トピック2概要>、<トピック3概要>
+
+冒頭段落：
+<トピック1>の公開と、<トピック2>、さらに<トピック3>が明らかになりました。
+
+**本日の注目トピック**
+- 直近で発表・検証された重要トピック3件（例：40年前のFORTRANコードをPython/NumPyへ自動移植し40%高速化した事例、Gemini 4 Argon/Carbonの実測ベンチマーク、トークン効率評価等）について、ベンチマーク数値や移行アーキテクチャを詳細に解説。
+
+**Google AI Pro プランでできる実践活用例**
+- 地方の拠点や個人開発者が今日から手元の環境で試せる具体的な活用例2件（概要と効果を明記）。
+
+**すぐに試せるワンポイントテクニック**
+- コピペで使えるプロンプトテンプレート、設定ファイル、またはCLI/Pythonコード例2件（完全なコードブロック付き）。
+
+**参考元リンク**
+- 公式発表、ドキュメント、ベンチマーク記事の正確なタイトルとURL一覧。
+
+【ハッシュタグ規程および末尾シグネチャー】
+参考元リンクの直後に、空行を1行空けて、直接プレーンテキストのコードブロック（```text ... ```）で、`#Gemini4Argon #GoogleAntigravity #GoogleAIStudio #GoogleAIPro` を含む12個のハッシュタグを出力してください。
+そして、記事全体の最終行は必ず以下の1行のみで終えてください：
 早く2月にならないかな・・・
 """
 
@@ -103,19 +128,19 @@ PARTS_CONFIG = {
     "A": {
         "title": "デジタルスキル・資産マネタイズ調査",
         "tag_suffix": "本日のデジタル資産・スキルのマネタイズ",
-        "prompt": PROMPT_PART_A,
+        "prompt_template": PROMPT_PART_A,
         "filename_part": "part_a"
     },
     "B": {
         "title": "海外の高度GAS活用事例調査",
         "tag_suffix": "本日の高度GAS",
-        "prompt": PROMPT_PART_B,
+        "prompt_template": PROMPT_PART_B,
         "filename_part": "part_b"
     },
     "C": {
         "title": "Gemini 4 / Antigravity / AI Studio 活用調査",
         "tag_suffix": "本日の生成AIニュース",
-        "prompt": PROMPT_PART_C,
+        "prompt_template": PROMPT_PART_C,
         "filename_part": "part_c"
     }
 }
@@ -148,30 +173,29 @@ def generate_report_text(part_key, target_date):
     cfg = PARTS_CONFIG[part_key]
     client = get_gemini_client()
     
-    if not client:
-        print(f"[{part_key}] Skipping API generation (no client). Using fallback placeholder.")
-        return f"# {target_date} - {cfg['title']}\n\n自動生成準備完了（GEMINI_API_KEY設定待ち）"
-
-    prompt = f"本日日付: {target_date} (JST)\n\n" + cfg["prompt"]
-    print(f"[{part_key}] Generating report with Gemini...")
+    prompt = cfg["prompt_template"].format(target_date=target_date)
+    print(f"[{part_key}] Generating report with Gemini (persona: やまねこ, date: {target_date})...")
     
-    # Try gemini-2.5-flash -> gemini-2.0-flash -> gemini-1.5-flash
-    models_to_try = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
-    for m in models_to_try:
-        try:
-            resp = client.models.generate_content(model=m, contents=prompt)
-            if resp and resp.text:
-                text = resp.text.strip()
-                # Post-process Part C signature if needed
-                if part_key == "C" and not text.endswith("早く2月にならないかな・・・"):
-                    text += "\n\n早く2月にならないかな・・・"
-                return text
-        except Exception as err:
-            print(f"[{part_key}] Model {m} failed: {err}")
-            continue
+    # Active Models: gemini-3.8-flash -> gemini-2.5-flash -> gemini-2.0-flash
+    models_to_try = ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"]
+    if client:
+        for m in models_to_try:
+            try:
+                resp = client.models.generate_content(model=m, contents=prompt)
+                if resp and resp.text:
+                    text = resp.text.strip()
+                    # Clean any accidental city leakage just in case
+                    text = text.replace("竹原市", "海辺の町").replace("竹原", "海辺の町")
+                    if part_key == "C" and not text.endswith("早く2月にならないかな・・・"):
+                        text += "\n\n早く2月にならないかな・・・"
+                    print(f"[{part_key}] Successfully generated {len(text)} characters using model {m}!")
+                    return text
+            except Exception as err:
+                print(f"[{part_key}] Model {m} failed: {err}")
+                continue
 
     print(f"[{part_key}] All Gemini API attempts failed. Falling back to structured baseline report.")
-    notice = f"> [!WARNING]\n> **GEMINI_API_KEY 更新推奨**: 現在設定されている `GEMINI_API_KEY` が無効または認証失敗（401）のため、規定テンプレートに基づきフォールバック生成しました。Google AI Studio（https://aistudio.google.com/app/apikey）から有効なAPIキーを取得し、GitHub Secretsの `GEMINI_API_KEY` を更新してください。\n\n"
+    notice = f"> [!WARNING]\n> **GEMINI_API_KEY 更新推奨**: Google AI Studio（https://aistudio.google.com/app/apikey）から有効なAPIキーを取得し、GitHub Secretsの `GEMINI_API_KEY` を更新してください。\n\n"
     
     if part_key == "A":
         return notice + f"""# {target_date} 本日のデジタルスキル・資産マネタイズ調査レポート
@@ -262,38 +286,38 @@ def generate_eyecatch_image(tag_text, target_date, output_path):
         print("GEMINI_API_KEY not found. Skipping image generation.")
         return False
 
-    try:
-        print("Calling Imagen 3 (imagen-3.0-generate-002)...")
-        result = client.models.generate_images(
-            model='imagen-3.0-generate-002',
-            prompt=prompt_res["prompt"],
-            config=dict(
-                number_of_images=1,
-                aspect_ratio="1:1",
-                output_mime_type="image/png"
-            )
-        )
-        if result and result.generated_images:
-            img_bytes = result.generated_images[0].image.image_bytes
-            with open(output_path, "wb") as f:
-                f.write(img_bytes)
-            print(f"Successfully generated and saved eyecatch: {output_path}")
-            return True
-    except Exception as e:
-        print(f"Imagen 3 generation failed: {e}")
-        # As fallback, create high quality placeholder image if pillow is available
+    # Try generate_content with image generation models
+    image_models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image", "gemini-3-pro-image"]
+    for m in image_models:
         try:
-            from PIL import Image, ImageDraw, ImageFont
-            img = Image.new("RGB", (1024, 1024), color=(20, 24, 33))
-            draw = ImageDraw.Draw(img)
-            draw.rectangle([50, 50, 974, 974], outline=(70, 80, 100), width=3)
-            # Center text banner
-            draw.text((512, 512), tag_text, fill=(255, 215, 0), anchor="mm")
-            img.save(output_path)
-            print(f"Saved fallback canvas to: {output_path}")
-            return True
-        except Exception as e2:
-            print(f"Fallback canvas creation failed: {e2}")
+            print(f"Calling image model {m} via generate_content...")
+            resp = client.models.generate_content(
+                model=m,
+                contents=prompt_res["prompt"]
+            )
+            if resp and resp.candidates and resp.candidates[0].content.parts:
+                for p in resp.candidates[0].content.parts:
+                    if p.inline_data and p.inline_data.data:
+                        with open(output_path, "wb") as f:
+                            f.write(p.inline_data.data)
+                        print(f"SUCCESS! Generated eyecatch ({m}): {output_path} (size: {len(p.inline_data.data)} bytes)")
+                        return True
+        except Exception as e:
+            print(f"Model {m} failed: {e}")
+            continue
+
+    # Fallback to Pillow canvas if all image models fail
+    try:
+        from PIL import Image, ImageDraw
+        img = Image.new("RGB", (1024, 1024), color=(20, 24, 33))
+        draw = ImageDraw.Draw(img)
+        draw.rectangle([50, 50, 974, 974], outline=(70, 80, 100), width=3)
+        draw.text((512, 512), tag_text, fill=(255, 215, 0), anchor="mm")
+        img.save(output_path)
+        print(f"Saved fallback canvas to: {output_path}")
+        return True
+    except Exception as e2:
+        print(f"Fallback canvas creation failed: {e2}")
 
     return False
 
@@ -383,7 +407,7 @@ def upload_to_drive(file_path, file_name, mime_type, folder_id=DEFAULT_FOLDER_ID
         except Exception as e:
             print(f"Service Account upload exception: {e}")
 
-    print(f"NOTE: Headless upload for {file_name} skipped or failed. File is preserved locally.")
+    print(f"NOTE: Headless upload for {file_name} skipped or preserved locally.")
     return False
 
 # ==========================================
