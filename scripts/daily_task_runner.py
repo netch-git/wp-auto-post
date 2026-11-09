@@ -349,7 +349,7 @@ def upload_to_drive(file_path, file_name, mime_type, folder_id=DEFAULT_FOLDER_ID
                 "base64Content": b64,
                 "token": gas_token
             }
-            res = requests.post(gas_url, json=payload, timeout=60)
+            res = requests.post(gas_url, json=payload, timeout=90, allow_redirects=True)
             if res.status_code == 200:
                 data = res.json()
                 if data.get("status") == "success":
