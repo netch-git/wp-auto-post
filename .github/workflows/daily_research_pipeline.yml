@@ -1,13 +1,11 @@
 name: Daily Research & Eyecatch Pipeline
 
 on:
-  schedule:
-    # 毎日 午前2:17 JST (UTC 17:17) : パートA（デジタル資産マネタイズ調査）
-    - cron: '17 17 * * *'
-    # 毎日 午前3:42 JST (UTC 18:42) : パートB（海外の高度GAS事例調査）
-    - cron: '42 18 * * *'
-    # 毎日 午前4:17 JST (UTC 19:17) : パートC（Gemini 4 / Antigravity / AI Studio調査）
-    - cron: '17 19 * * *'
+# schedule:
+#   # 定期実行は停止中（手動 workflow_dispatch のみ可能）
+#   - cron: '17 17 * * *'
+#   - cron: '42 18 * * *'
+#   - cron: '17 19 * * *'
   workflow_dispatch:
     inputs:
       part:
