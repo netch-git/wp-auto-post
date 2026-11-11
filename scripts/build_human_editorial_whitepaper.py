@@ -168,6 +168,123 @@ for b_name, c_list in bloc_definitions.items():
         'godo': res[3]
     })
 
+
+# 4.5 D3 Force-Directed Network Graph payload
+cluster_mapping = {
+    '広島市中区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '広島市西区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '広島市南区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '広島市東区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '広島市安佐南区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '広島市安佐北区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '広島市佐伯区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '広島市安芸区': ('中枢サービス・本社機能圏', '#1b3d6d'),
+    '東広島市': ('西条学術・スタートアップ圏', '#275236'),
+    '安芸郡府中町': ('西条学術・スタートアップ圏', '#275236'),
+    '安芸郡海田町': ('西条学術・スタートアップ圏', '#275236'),
+    '安芸郡熊野町': ('西条学術・スタートアップ圏', '#275236'),
+    '廿日市市': ('西条学術・スタートアップ圏', '#275236'),
+    '山県郡安芸太田町': ('西条学術・スタートアップ圏', '#275236'),
+    '福山市': ('備後ものづくり・重工業圏', '#85221b'),
+    '府中市': ('備後ものづくり・重工業圏', '#85221b'),
+    '尾道市': ('備後ものづくり・重工業圏', '#85221b'),
+    '三原市': ('備後ものづくり・重工業圏', '#85221b'),
+    '神石郡神石高原町': ('備後ものづくり・重工業圏', '#85221b'),
+    '世羅郡世羅町': ('備後ものづくり・重工業圏', '#85221b'),
+    '呉市': ('芸南・海事インフラ圏', '#0f766e'),
+    '江田島市': ('芸南・海事インフラ圏', '#0f766e'),
+    '竹原市': ('芸南・海事インフラ圏', '#0f766e'),
+    '豊田郡大崎上島町': ('芸南・海事インフラ圏', '#0f766e'),
+    '三次市': ('中山間・アグリ分散圏', '#8c5b36'),
+    '庄原市': ('中山間・アグリ分散圏', '#8c5b36'),
+    '安芸高田市': ('中山間・アグリ分散圏', '#8c5b36'),
+    '山県郡北広島町': ('中山間・アグリ分散圏', '#8c5b36'),
+    '大竹市': ('中山間・アグリ分散圏', '#8c5b36'),
+    '安芸郡坂町': ('中山間・アグリ分散圏', '#8c5b36')
+}
+
+tier_map = {
+    '福山市': '超中核 (Core)',
+    '広島市中区': '超中核 (Core)',
+    '広島市西区': '超中核 (Core)',
+    '呉市': '準中核 (Semi-Core)',
+    '広島市南区': '準中核 (Semi-Core)',
+    '尾道市': '準中核 (Semi-Core)',
+    '広島市安佐南区': '準中核 (Semi-Core)',
+    '東広島市': '準中核 (Semi-Core)',
+    '広島市東区': '準中核 (Semi-Core)',
+    '広島市安佐北区': '準中核 (Semi-Core)',
+    '廿日市市': '準中核 (Semi-Core)',
+    '府中市': '準中核 (Semi-Core)',
+    '安芸郡府中町': '準中核 (Semi-Core)',
+    '三原市': '準中核 (Semi-Core)'
+}
+
+d3_nodes = []
+for city, cnt, pats, subs in city_stats:
+    cl_name, cl_color = cluster_mapping.get(city, ('中枢サービス・本社機能圏', '#1b3d6d'))
+    tier_name = tier_map.get(city, '周縁 (Periphery)')
+    tier_color = '#1e232a' if '超中核' in tier_name else ('#1b3d6d' if '準中核' in tier_name else '#78716c')
+    is_tda_void = city in ['三次市', '庄原市', '安芸高田市']
+    r = round(7 + 19 * (math.log(max(cnt, 2)) / math.log(1300)), 1)
+    share = round(cnt / total_corps_num * 100, 2)
+    d3_nodes.append({
+        'id': city,
+        'name': city,
+        'cnt': cnt,
+        'share': share,
+        'patents': pats,
+        'subsidies': subs,
+        'cluster': cl_name,
+        'clusterColor': cl_color,
+        'tier': tier_name,
+        'tierColor': tier_color,
+        'isVoid': is_tda_void,
+        'r': r
+    })
+
+d3_links = [
+    {'source': '広島市中区', 'target': '広島市西区', 'weight': 1.0, 'distance': 55},
+    {'source': '広島市中区', 'target': '広島市南区', 'weight': 1.0, 'distance': 55},
+    {'source': '広島市中区', 'target': '広島市東区', 'weight': 0.9, 'distance': 60},
+    {'source': '広島市中区', 'target': '広島市安佐南区', 'weight': 0.8, 'distance': 70},
+    {'source': '広島市中区', 'target': '広島市佐伯区', 'weight': 0.7, 'distance': 75},
+    {'source': '広島市中区', 'target': '安芸郡府中町', 'weight': 0.85, 'distance': 65},
+    {'source': '広島市西区', 'target': '広島市佐伯区', 'weight': 0.8, 'distance': 65},
+    {'source': '広島市佐伯区', 'target': '廿日市市', 'weight': 0.85, 'distance': 65},
+    {'source': '廿日市市', 'target': '大竹市', 'weight': 0.75, 'distance': 75},
+    {'source': '広島市安佐南区', 'target': '広島市安佐北区', 'weight': 0.85, 'distance': 65},
+    {'source': '広島市東区', 'target': '安芸郡府中町', 'weight': 0.9, 'distance': 55},
+    {'source': '安芸郡府中町', 'target': '安芸郡海田町', 'weight': 0.8, 'distance': 65},
+    {'source': '安芸郡海田町', 'target': '広島市安芸区', 'weight': 0.8, 'distance': 60},
+    {'source': '安芸郡海田町', 'target': '安芸郡坂町', 'weight': 0.7, 'distance': 70},
+    {'source': '安芸郡坂町', 'target': '呉市', 'weight': 0.75, 'distance': 70},
+    {'source': '安芸郡熊野町', 'target': '呉市', 'weight': 0.7, 'distance': 70},
+    {'source': '安芸郡熊野町', 'target': '広島市安芸区', 'weight': 0.7, 'distance': 70},
+    {'source': '呉市', 'target': '江田島市', 'weight': 0.8, 'distance': 65},
+    {'source': '呉市', 'target': '東広島市', 'weight': 0.75, 'distance': 80},
+    {'source': '東広島市', 'target': '広島市中区', 'weight': 0.85, 'distance': 85},
+    {'source': '東広島市', 'target': '竹原市', 'weight': 0.7, 'distance': 75},
+    {'source': '東広島市', 'target': '三原市', 'weight': 0.75, 'distance': 80},
+    {'source': '竹原市', 'target': '豊田郡大崎上島町', 'weight': 0.8, 'distance': 65},
+    {'source': '福山市', 'target': '尾道市', 'weight': 0.95, 'distance': 60},
+    {'source': '福山市', 'target': '府中市', 'weight': 0.85, 'distance': 65},
+    {'source': '福山市', 'target': '神石郡神石高原町', 'weight': 0.65, 'distance': 85},
+    {'source': '尾道市', 'target': '三原市', 'weight': 0.85, 'distance': 65},
+    {'source': '尾道市', 'target': '世羅郡世羅町', 'weight': 0.7, 'distance': 80},
+    {'source': '府中市', 'target': '世羅郡世羅町', 'weight': 0.7, 'distance': 80},
+    {'source': '福山市', 'target': '東広島市', 'weight': 0.6, 'distance': 110},
+    {'source': '三次市', 'target': '庄原市', 'weight': 0.9, 'distance': 70},
+    {'source': '庄原市', 'target': '安芸高田市', 'weight': 0.8, 'distance': 75},
+    {'source': '安芸高田市', 'target': '三次市', 'weight': 0.9, 'distance': 70},
+    {'source': '三次市', 'target': '山県郡北広島町', 'weight': 0.7, 'distance': 80},
+    {'source': '山県郡北広島町', 'target': '山県郡安芸太田町', 'weight': 0.75, 'distance': 75},
+    {'source': '山県郡安芸太田町', 'target': '広島市佐伯区', 'weight': 0.6, 'distance': 90},
+    {'source': '安芸高田市', 'target': '広島市安佐北区', 'weight': 0.75, 'distance': 80},
+    {'source': '三次市', 'target': '世羅郡世羅町', 'weight': 0.7, 'distance': 75},
+    {'source': '世羅郡世羅町', 'target': '東広島市', 'weight': 0.65, 'distance': 85}
+]
+
 stats_payload = {
     'total_corps': total_corps_num,
     'zipf': {
@@ -179,7 +296,8 @@ stats_payload = {
     'lorenz': lorenz_pts,
     'blocs': blocs_data,
     'mapMarkers': markers,
-    'clusters': clusters
+    'clusters': clusters,
+    'd3_network': {'nodes': d3_nodes, 'links': d3_links}
 }
 
 corps_json_str = json.dumps(all_corps, ensure_ascii=False)
@@ -214,6 +332,7 @@ html_content = f"""<!DOCTYPE html>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 
   <style>
     :root {{
@@ -577,6 +696,98 @@ html_content = f"""<!DOCTYPE html>
             <!-- Dynamically populated -->
           </tbody>
         </table>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ==================== 【特装可視化】D3.js インタラクティブ産業重力ネットワーク ==================== -->
+  <section class="mb-14">
+    <div class="border-b-2 border-stone-800 pb-2 mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-baseline gap-2">
+      <div>
+        <span class="text-xs font-mono font-bold text-stone-700 mr-2">【特装可視化】</span>
+        <h3 class="inline text-base sm:text-xl font-bold font-mincho text-stone-900">
+          D3.js インタラクティブ産業重力・クラスタ連関ネットワーク
+        </h3>
+      </div>
+      <span class="text-xs font-mono text-stone-500">D3.js FORCE-DIRECTED REGIONAL INDUSTRIAL NETWORK</span>
+    </div>
+
+    <div class="broadsheet-plate p-4 sm:p-5 mb-4">
+      <div class="flex flex-col lg:flex-row justify-between gap-4 mb-3">
+        <div class="flex-1 text-xs text-stone-700 leading-relaxed text-justify">
+          世界最高峰のデータ可視化ライブラリ<strong>「D3.js (Data-Driven Documents v7)」</strong>の力学シミュレーション（Force-Directed Simulation）を用い、県内全30自治体の企業集積・産業引力・Leidenモジュラリティ（経済圏域）を有機的に描画。ノードの大きさは企業集積規模、配色は経済機能クラスタ、リンクは地理・経済的引力を反映しています。<br>
+          <span class="font-bold text-stone-900">インタラクティブ操作：</span>ノードをマウスやタッチ操作で自由にドラッグして弾性を体感できます。ノードをクリックまたはマウスオーバーすると右側の「自治体カルテ」に計量諸元が即時表示されます。
+        </div>
+
+        <!-- コントロールボタン群 -->
+        <div class="flex flex-wrap items-center gap-1.5 self-start shrink-0">
+          <button id="d3ModeCluster" class="px-2.5 py-1 text-xs font-mono bg-stone-900 text-stone-100 hover:bg-stone-700 transition">Leiden クラスタ別</button>
+          <button id="d3ModeTier" class="px-2.5 py-1 text-xs font-mono bg-stone-200 text-stone-800 hover:bg-stone-300 transition">Core-Peri 階層</button>
+          <button id="d3ModeTda" class="px-2.5 py-1 text-xs font-mono bg-stone-200 text-stone-800 hover:bg-stone-300 transition">TDA空洞強調 (Carbon 30)</button>
+          <button id="d3ResetZoom" class="px-2.5 py-1 text-xs font-mono bg-stone-100 text-stone-600 border rule-single hover:bg-stone-200 transition">配置復帰</button>
+        </div>
+      </div>
+
+      <!-- D3 Visual Container + Info Box Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div class="lg:col-span-3 relative border rule-single bg-[#fbf9f4] overflow-hidden" style="height: 520px;">
+          <svg id="d3NetworkSvg" class="w-full h-full cursor-grab active:cursor-grabbing"></svg>
+          <div class="absolute bottom-2 left-2 px-2 py-1 bg-white/90 border rule-single text-[10px] font-mono text-stone-500">
+            D3.js v7 Physical Simulation | Zoom & Pan Enabled | Touch & Drag Interactive
+          </div>
+        </div>
+
+        <!-- 自治体計量カルテ (Dossier Panel) -->
+        <div class="lg:col-span-1 broadsheet-card p-4 flex flex-col justify-between text-xs">
+          <div>
+            <div class="text-[11px] font-mono text-stone-500 border-b rule-single pb-1 mb-2">MUNICIPAL DOSSIER</div>
+            <h4 id="dossierName" class="text-base font-bold font-mincho text-stone-900 mb-0.5">広島県全域</h4>
+            <div id="dossierTier" class="inline-block px-1.5 py-0.5 text-[10px] font-mono bg-stone-200 text-stone-800 mb-2">全県総括</div>
+            
+            <dl class="space-y-1.5 font-mono text-[11px]">
+              <div class="flex justify-between border-b border-stone-200 pb-0.5">
+                <span class="text-stone-500 font-sans">実測法人数:</span>
+                <span id="dossierCorps" class="font-bold text-stone-900">{total_corps_num:,} 社</span>
+              </div>
+              <div class="flex justify-between border-b border-stone-200 pb-0.5">
+                <span class="text-stone-500 font-sans">県内占有率:</span>
+                <span id="dossierShare" class="font-bold text-stone-900">100.0%</span>
+              </div>
+              <div class="flex justify-between border-b border-stone-200 pb-0.5">
+                <span class="text-stone-500 font-sans">特許庁知財:</span>
+                <span id="dossierPatents" class="text-stone-800">17,970 件</span>
+              </div>
+              <div class="flex justify-between border-b border-stone-200 pb-0.5">
+                <span class="text-stone-500 font-sans">公的補助金:</span>
+                <span id="dossierSubs" class="text-stone-800">18 件</span>
+              </div>
+              <div class="border-b border-stone-200 pb-1 pt-1">
+                <span class="text-stone-500 block mb-0.5 font-sans">経済圏クラスタ:</span>
+                <span id="dossierCluster" class="font-sans font-bold text-stone-800">全県複合機能圏</span>
+              </div>
+            </dl>
+          </div>
+
+          <div class="mt-4 pt-2 border-t rule-single text-[10px] text-stone-500 leading-normal">
+            左のD3ネットワーク図で自治体ノードをクリックまたはマウスオーバーすると、計量諸元がここに反映されます。
+          </div>
+        </div>
+      </div>
+
+      <!-- クラスタ凡例 -->
+      <div id="d3Legend" class="mt-3 pt-2.5 border-t rule-single flex flex-wrap items-center justify-between text-xs text-stone-700 gap-2 font-mono">
+        <div class="flex flex-wrap items-center gap-3 text-[11px]">
+          <span class="font-bold font-sans">クラスタ凡例:</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#1b3d6d;"></span> 中枢サービス</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#85221b;"></span> 備後ものづくり</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#275236;"></span> 西条学術・産学</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#0f766e;"></span> 芸南・海事</span>
+          <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full inline-block" style="background:#8c5b36;"></span> 中山間・アグリ</span>
+        </div>
+        <div class="text-[11px] text-stone-500">
+          二重枠線: 超中核 (Core) / 円径: 法人規模
+        </div>
       </div>
     </div>
   </section>
@@ -1245,6 +1456,255 @@ html_content = f"""<!DOCTYPE html>
     pSlider.addEventListener('input', updateLogistic);
     cSlider.addEventListener('input', updateLogistic);
     updateLogistic();
+
+
+    // 6.5 D3.js Physical Simulation Network
+    (function initD3Network() {{
+      const svg = d3.select("#d3NetworkSvg");
+      if (!svg.node()) return;
+
+      const container = svg.node().parentElement;
+      const width = container.clientWidth || 700;
+      const height = container.clientHeight || 520;
+      svg.attr("viewBox", [0, 0, width, height]);
+
+      const g = svg.append("g");
+
+      // Zoom & Pan
+      const zoom = d3.zoom()
+        .scaleExtent([0.5, 3.5])
+        .on("zoom", (event) => {{
+          g.attr("transform", event.transform);
+        }});
+      svg.call(zoom);
+
+      // Deep copy nodes and links
+      const rawNodes = STATS.d3_network.nodes;
+      const rawLinks = STATS.d3_network.links;
+      const nodes = rawNodes.map(d => Object.assign({{}}, d));
+      const links = rawLinks.map(d => Object.assign({{}}, d));
+
+      // Force Simulation
+      const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(d => d.distance || 70).strength(0.45))
+        .force("charge", d3.forceManyBody().strength(d => -Math.max(80, d.r * 22)))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide().radius(d => d.r + 9).iterations(2));
+
+      // TDA Cavity Group
+      const tdaGroup = g.append("g").attr("class", "tda-cavity").style("opacity", 0);
+      const tdaPoly = tdaGroup.append("polygon")
+        .attr("fill", "rgba(133, 34, 27, 0.16)")
+        .attr("stroke", "#85221b")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "4,4");
+      const tdaText = tdaGroup.append("text")
+        .text("TDA Betti-1 構造空洞 (三次・庄原・安芸高田)")
+        .attr("font-size", "10px")
+        .attr("font-family", "'JetBrains Mono', monospace")
+        .attr("font-weight", "bold")
+        .attr("fill", "#85221b")
+        .attr("text-anchor", "middle")
+        .style("paint-order", "stroke")
+        .style("stroke", "#fbf9f4")
+        .style("stroke-width", "3.5px");
+
+      // Draw Links
+      const link = g.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("stroke", "#b8b2a5")
+        .attr("stroke-opacity", 0.6)
+        .attr("stroke-width", d => Math.sqrt(d.weight || 1) * 1.6);
+
+      // Draw Nodes
+      const node = g.append("g")
+        .attr("class", "nodes")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .call(d3.drag()
+          .on("start", dragstarted)
+          .on("drag", dragged)
+          .on("end", dragended));
+
+      // Circle Outer Ring for Super-Core
+      node.filter(d => d.tier === '超中核 (Core)')
+        .append("circle")
+        .attr("r", d => d.r + 4)
+        .attr("fill", "none")
+        .attr("stroke", "#1e232a")
+        .attr("stroke-width", 1.2)
+        .attr("stroke-dasharray", "2,2");
+
+      // Main Circle
+      const circles = node.append("circle")
+        .attr("r", d => d.r)
+        .attr("fill", d => d.clusterColor)
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 1.5)
+        .attr("cursor", "pointer")
+        .attr("class", "transition-colors duration-200");
+
+      // Node Labels
+      const labels = node.append("text")
+        .text(d => d.name)
+        .attr("x", 0)
+        .attr("y", d => -d.r - 4)
+        .attr("text-anchor", "middle")
+        .attr("font-size", d => d.tier === '超中核 (Core)' ? "11px" : "9.5px")
+        .attr("font-weight", d => d.tier === '超中核 (Core)' ? "700" : "500")
+        .attr("font-family", "'Noto Sans JP', sans-serif")
+        .attr("fill", "#1e232a")
+        .style("paint-order", "stroke")
+        .style("stroke", "#fbf9f4")
+        .style("stroke-width", "3.5px")
+        .style("stroke-linecap", "round")
+        .style("stroke-linejoin", "round")
+        .attr("pointer-events", "none");
+
+      // Simulation Ticks
+      simulation.on("tick", () => {{
+        link
+          .attr("x1", d => d.source.x)
+          .attr("y1", d => d.source.y)
+          .attr("x2", d => d.target.x)
+          .attr("y2", d => d.target.y);
+
+        node.attr("transform", d => `translate(${{d.x}},${{d.y}})`);
+
+        // TDA polygon update
+        const m = nodes.find(n => n.id === '三次市');
+        const s = nodes.find(n => n.id === '庄原市');
+        const a = nodes.find(n => n.id === '安芸高田市');
+        if (m && s && a && m.x) {{
+          tdaPoly.attr("points", `${{m.x}},${{m.y}} ${{s.x}},${{s.y}} ${{a.x}},${{a.y}}`);
+          tdaText.attr("x", (m.x + s.x + a.x) / 3).attr("y", (m.y + s.y + a.y) / 3 - 8);
+        }}
+      }});
+
+      // Drag functions
+      function dragstarted(event, d) {{
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }}
+      function dragged(event, d) {{
+        d.fx = event.x;
+        d.fy = event.y;
+      }}
+      function dragended(event, d) {{
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }}
+
+      // Dossier Elements
+      const dossierName = document.getElementById('dossierName');
+      const dossierTier = document.getElementById('dossierTier');
+      const dossierCorps = document.getElementById('dossierCorps');
+      const dossierShare = document.getElementById('dossierShare');
+      const dossierPatents = document.getElementById('dossierPatents');
+      const dossierSubs = document.getElementById('dossierSubs');
+      const dossierCluster = document.getElementById('dossierCluster');
+
+      function updateDossier(d) {{
+        if (!d) return;
+        dossierName.innerText = d.name;
+        dossierTier.innerText = d.tier;
+        dossierTier.style.background = d.tier.includes('超中核') ? '#1e232a' : (d.tier.includes('準中核') ? '#1b3d6d' : '#e7e5e4');
+        dossierTier.style.color = d.tier.includes('周縁') ? '#292524' : '#ffffff';
+        dossierCorps.innerText = `${{d.cnt.toLocaleString()}} 社`;
+        dossierShare.innerText = `${{d.share}}%`;
+        dossierPatents.innerText = `${{d.patents.toLocaleString()}} 件`;
+        dossierSubs.innerText = `${{d.subsidies.toLocaleString()}} 件`;
+        dossierCluster.innerText = d.cluster;
+        dossierCluster.style.color = d.clusterColor;
+
+        // Highlight connected links
+        link.attr("stroke", l => (l.source.id === d.id || l.target.id === d.id) ? '#85221b' : '#b8b2a5')
+            .attr("stroke-opacity", l => (l.source.id === d.id || l.target.id === d.id) ? 1.0 : 0.25)
+            .attr("stroke-width", l => (l.source.id === d.id || l.target.id === d.id) ? 2.8 : 1.2);
+
+        // Highlight node
+        circles.attr("stroke", n => n.id === d.id ? '#85221b' : '#ffffff')
+               .attr("stroke-width", n => n.id === d.id ? 3 : 1.5);
+      }}
+
+      function resetHighlights() {{
+        link.attr("stroke", '#b8b2a5')
+            .attr("stroke-opacity", 0.6)
+            .attr("stroke-width", d => Math.sqrt(d.weight || 1) * 1.6);
+        circles.attr("stroke", '#ffffff')
+               .attr("stroke-width", 1.5);
+      }}
+
+      node.on("mouseover", (event, d) => updateDossier(d));
+      node.on("click", (event, d) => updateDossier(d));
+      svg.on("click", (event) => {{
+        if (event.target.tagName === 'svg') resetHighlights();
+      }});
+
+      // Mode toggles
+      let currentMode = 'cluster';
+      const btnCluster = document.getElementById('d3ModeCluster');
+      const btnTier = document.getElementById('d3ModeTier');
+      const btnTda = document.getElementById('d3ModeTda');
+      const btnReset = document.getElementById('d3ResetZoom');
+
+      function setActiveBtn(btn) {{
+        [btnCluster, btnTier, btnTda].forEach(b => {{
+          b.className = 'px-2.5 py-1 text-xs font-mono bg-stone-200 text-stone-800 hover:bg-stone-300 transition';
+        }});
+        btn.className = 'px-2.5 py-1 text-xs font-mono bg-stone-900 text-stone-100 hover:bg-stone-700 transition';
+      }}
+
+      btnCluster.addEventListener('click', () => {{
+        setActiveBtn(btnCluster);
+        currentMode = 'cluster';
+        tdaGroup.transition().duration(300).style("opacity", 0);
+        circles.transition().duration(400)
+          .attr("fill", d => d.clusterColor)
+          .attr("opacity", 1);
+        labels.transition().duration(400).attr("opacity", 1);
+        link.transition().duration(400).attr("stroke-opacity", 0.6);
+      }});
+
+      btnTier.addEventListener('click', () => {{
+        setActiveBtn(btnTier);
+        currentMode = 'tier';
+        tdaGroup.transition().duration(300).style("opacity", 0);
+        circles.transition().duration(400)
+          .attr("fill", d => d.tierColor)
+          .attr("opacity", 1);
+        labels.transition().duration(400).attr("opacity", 1);
+        link.transition().duration(400).attr("stroke-opacity", 0.6);
+      }});
+
+      btnTda.addEventListener('click', () => {{
+        setActiveBtn(btnTda);
+        currentMode = 'tda';
+        tdaGroup.transition().duration(500).style("opacity", 1);
+        circles.transition().duration(400)
+          .attr("fill", d => d.isVoid ? '#85221b' : '#d6d3d1')
+          .attr("opacity", d => d.isVoid ? 1 : 0.35);
+        labels.transition().duration(400)
+          .attr("opacity", d => (d.isVoid || d.tier.includes('超中核')) ? 1 : 0.25);
+        link.transition().duration(400)
+          .attr("stroke-opacity", l => (l.source.isVoid && l.target.isVoid) ? 1.0 : 0.15)
+          .attr("stroke", l => (l.source.isVoid && l.target.isVoid) ? '#85221b' : '#b8b2a5')
+          .attr("stroke-width", l => (l.source.isVoid && l.target.isVoid) ? 2.5 : 1.0);
+      }});
+
+      btnReset.addEventListener('click', () => {{
+        svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity);
+        simulation.alpha(0.6).restart();
+      }});
+
+    }})();
+
 
     // 7. Full Corporate Ledger
     let filteredData = [...ALL_CORPS];
