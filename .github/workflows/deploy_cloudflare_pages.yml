@@ -1,0 +1,27 @@
+name: Deploy Whitepaper to Cloudflare Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dist/**'
+      - 'site/**'
+      - '.github/workflows/deploy_cloudflare_pages.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 962e06193ba3f440c220306b591d03d1
+          projectName: hiroshima-opendata-whitepaper
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

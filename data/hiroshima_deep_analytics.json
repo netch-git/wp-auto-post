@@ -1,0 +1,588 @@
+{
+  "meta": {
+    "title": "広島県企業エコシステム包括統計分析白書",
+    "source": "経済産業省 gBizINFO API v2",
+    "total_corporations_analyzed": 3222,
+    "total_municipalities": 30,
+    "generated_at": "2026年11月11日 11:27"
+  },
+  "zipf_regression": {
+    "alpha": 4.3572,
+    "beta": -0.5174,
+    "r_squared": 0.8901,
+    "formula": "ln(順位) = 4.3572 - 0.5174 × ln(法人数)",
+    "interpretation": "決定係数 R² = 0.8901。広島県の企業集積はべき乗則に極めて厳密に適合。上位都市（広島市・福山市）への集中弾力性は 0.517 です。"
+  },
+  "gini_analysis": {
+    "coefficient": 0.6692,
+    "interpretation": "地域企業集積のジニ係数は 0.6692。沿岸・大都市圏への極度な偏在と、中山間地域の企業不足という二極化構造を定量的に立証。"
+  },
+  "lorenz_curve": [
+    {
+      "pop": 0.0,
+      "share": 0.0
+    },
+    {
+      "pop": 3.3,
+      "share": 0.1
+    },
+    {
+      "pop": 6.7,
+      "share": 0.2
+    },
+    {
+      "pop": 10.0,
+      "share": 0.4
+    },
+    {
+      "pop": 13.3,
+      "share": 0.7
+    },
+    {
+      "pop": 16.7,
+      "share": 0.9
+    },
+    {
+      "pop": 20.0,
+      "share": 1.2
+    },
+    {
+      "pop": 23.3,
+      "share": 1.5
+    },
+    {
+      "pop": 26.7,
+      "share": 1.8
+    },
+    {
+      "pop": 30.0,
+      "share": 2.1
+    },
+    {
+      "pop": 33.3,
+      "share": 2.4
+    },
+    {
+      "pop": 36.7,
+      "share": 2.9
+    },
+    {
+      "pop": 40.0,
+      "share": 3.4
+    },
+    {
+      "pop": 43.3,
+      "share": 3.9
+    },
+    {
+      "pop": 46.7,
+      "share": 4.6
+    },
+    {
+      "pop": 50.0,
+      "share": 5.6
+    },
+    {
+      "pop": 53.3,
+      "share": 6.6
+    },
+    {
+      "pop": 56.7,
+      "share": 8.0
+    },
+    {
+      "pop": 60.0,
+      "share": 9.5
+    },
+    {
+      "pop": 63.3,
+      "share": 11.2
+    },
+    {
+      "pop": 66.7,
+      "share": 13.0
+    },
+    {
+      "pop": 70.0,
+      "share": 15.6
+    },
+    {
+      "pop": 73.3,
+      "share": 19.0
+    },
+    {
+      "pop": 76.7,
+      "share": 24.5
+    },
+    {
+      "pop": 80.0,
+      "share": 30.6
+    },
+    {
+      "pop": 83.3,
+      "share": 37.2
+    },
+    {
+      "pop": 86.7,
+      "share": 43.9
+    },
+    {
+      "pop": 90.0,
+      "share": 53.5
+    },
+    {
+      "pop": 93.3,
+      "share": 63.8
+    },
+    {
+      "pop": 96.7,
+      "share": 78.2
+    },
+    {
+      "pop": 100.0,
+      "share": 100.0
+    }
+  ],
+  "regional_blocs": [
+    {
+      "name": "広島都市圏（芸西）",
+      "corporations": 2727,
+      "kabu": 971,
+      "godo": 686
+    },
+    {
+      "name": "備後都市圏（芸東）",
+      "corporations": 314,
+      "kabu": 18,
+      "godo": 200
+    },
+    {
+      "name": "芸南・瀬戸内沿岸圏",
+      "corporations": 95,
+      "kabu": 9,
+      "godo": 66
+    },
+    {
+      "name": "中山間・県北内陸圏",
+      "corporations": 86,
+      "kabu": 2,
+      "godo": 48
+    }
+  ],
+  "clusters": [
+    {
+      "location": "広島県府中市府川町３１５",
+      "count": 47,
+      "city": "府中市"
+    },
+    {
+      "location": "広島県福山市東桜町３－５",
+      "count": 23,
+      "city": "福山市"
+    },
+    {
+      "location": "広島県東広島市西条栄町８－２９",
+      "count": 22,
+      "city": "東広島市"
+    },
+    {
+      "location": "広島県安芸高田市吉田町吉田７９１",
+      "count": 10,
+      "city": "安芸高田市"
+    },
+    {
+      "location": "広島県三原市港町３丁目５－１",
+      "count": 8,
+      "city": "三原市"
+    },
+    {
+      "location": "広島県広島市西区草津港１丁目８番１号",
+      "count": 5,
+      "city": "広島市西区"
+    },
+    {
+      "location": "広島県広島市中区上八丁堀２－４３",
+      "count": 5,
+      "city": "広島市中区"
+    },
+    {
+      "location": "広島県大竹市小方１丁目１１－１",
+      "count": 4,
+      "city": "大竹市"
+    },
+    {
+      "location": "広島県福山市柳津町７２９番地",
+      "count": 3,
+      "city": "福山市"
+    },
+    {
+      "location": "広島県江田島市江田島町江南１丁目２番８号",
+      "count": 3,
+      "city": "江田島市"
+    },
+    {
+      "location": "広島県庄原市中本町１丁目１０－１",
+      "count": 3,
+      "city": "庄原市"
+    },
+    {
+      "location": "広島県広島市東区光町１丁目１１番５号",
+      "count": 3,
+      "city": "広島市東区"
+    },
+    {
+      "location": "広島県広島市安佐北区可部４丁目１３－１３",
+      "count": 3,
+      "city": "広島市安佐北区"
+    },
+    {
+      "location": "広島県広島市佐伯区楽々園５丁目９番１５－１４１１号",
+      "count": 3,
+      "city": "広島市佐伯区"
+    },
+    {
+      "location": "広島県広島市中区銀山町１２番２２号",
+      "count": 3,
+      "city": "広島市中区"
+    }
+  ],
+  "cities": [
+    {
+      "name": "広島市中区",
+      "count": 701,
+      "kabu": 278,
+      "yugen": 247,
+      "godo": 150,
+      "patents": 1,
+      "subsidies": 0,
+      "lat": 34.3892,
+      "lng": 132.4552
+    },
+    {
+      "name": "広島市西区",
+      "count": 464,
+      "kabu": 204,
+      "yugen": 153,
+      "godo": 105,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.398,
+      "lng": 132.4286
+    },
+    {
+      "name": "広島市南区",
+      "count": 333,
+      "kabu": 136,
+      "yugen": 132,
+      "godo": 63,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3812,
+      "lng": 132.477
+    },
+    {
+      "name": "広島市安佐南区",
+      "count": 309,
+      "kabu": 100,
+      "yugen": 131,
+      "godo": 77,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.4534,
+      "lng": 132.4646
+    },
+    {
+      "name": "広島市安佐北区",
+      "count": 217,
+      "kabu": 69,
+      "yugen": 106,
+      "godo": 37,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.5178,
+      "lng": 132.5117
+    },
+    {
+      "name": "広島市東区",
+      "count": 211,
+      "kabu": 60,
+      "yugen": 97,
+      "godo": 53,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.4068,
+      "lng": 132.482
+    },
+    {
+      "name": "広島市佐伯区",
+      "count": 196,
+      "kabu": 71,
+      "yugen": 80,
+      "godo": 43,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3756,
+      "lng": 132.3619
+    },
+    {
+      "name": "福山市",
+      "count": 180,
+      "kabu": 14,
+      "yugen": 1,
+      "godo": 136,
+      "patents": 35,
+      "subsidies": 0,
+      "lat": 34.4858,
+      "lng": 133.3626
+    },
+    {
+      "name": "東広島市",
+      "count": 107,
+      "kabu": 7,
+      "yugen": 2,
+      "godo": 71,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.427,
+      "lng": 132.7432
+    },
+    {
+      "name": "広島市安芸区",
+      "count": 84,
+      "kabu": 31,
+      "yugen": 38,
+      "godo": 15,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3642,
+      "lng": 132.5312
+    },
+    {
+      "name": "呉市",
+      "count": 59,
+      "kabu": 5,
+      "yugen": 1,
+      "godo": 44,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.2494,
+      "lng": 132.5658
+    },
+    {
+      "name": "府中市",
+      "count": 56,
+      "kabu": 1,
+      "yugen": 0,
+      "godo": 6,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.5703,
+      "lng": 133.2389
+    },
+    {
+      "name": "尾道市",
+      "count": 47,
+      "kabu": 1,
+      "yugen": 1,
+      "godo": 40,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.4093,
+      "lng": 133.1972
+    },
+    {
+      "name": "廿日市市",
+      "count": 46,
+      "kabu": 7,
+      "yugen": 1,
+      "godo": 35,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3486,
+      "lng": 132.3314
+    },
+    {
+      "name": "安芸郡府中町",
+      "count": 33,
+      "kabu": 6,
+      "yugen": 5,
+      "godo": 21,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3957,
+      "lng": 132.5029
+    },
+    {
+      "name": "三原市",
+      "count": 31,
+      "kabu": 2,
+      "yugen": 1,
+      "godo": 18,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3986,
+      "lng": 133.0805
+    },
+    {
+      "name": "三次市",
+      "count": 22,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 18,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.8055,
+      "lng": 132.8524
+    },
+    {
+      "name": "安芸高田市",
+      "count": 18,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 8,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.6644,
+      "lng": 132.7056
+    },
+    {
+      "name": "江田島市",
+      "count": 16,
+      "kabu": 2,
+      "yugen": 1,
+      "godo": 12,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.2536,
+      "lng": 132.4772
+    },
+    {
+      "name": "安芸郡海田町",
+      "count": 14,
+      "kabu": 2,
+      "yugen": 3,
+      "godo": 7,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3637,
+      "lng": 132.5332
+    },
+    {
+      "name": "大竹市",
+      "count": 11,
+      "kabu": 2,
+      "yugen": 0,
+      "godo": 4,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.2215,
+      "lng": 132.2223
+    },
+    {
+      "name": "庄原市",
+      "count": 10,
+      "kabu": 1,
+      "yugen": 0,
+      "godo": 5,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.8582,
+      "lng": 133.0177
+    },
+    {
+      "name": "山県郡北広島町",
+      "count": 10,
+      "kabu": 1,
+      "yugen": 0,
+      "godo": 5,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.6713,
+      "lng": 132.5367
+    },
+    {
+      "name": "竹原市",
+      "count": 9,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 6,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3435,
+      "lng": 132.9103
+    },
+    {
+      "name": "世羅郡世羅町",
+      "count": 9,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 3,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.5828,
+      "lng": 133.0559
+    },
+    {
+      "name": "神石郡神石高原町",
+      "count": 8,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 5,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.7436,
+      "lng": 133.2625
+    },
+    {
+      "name": "山県郡安芸太田町",
+      "count": 7,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 3,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.5886,
+      "lng": 132.3168
+    },
+    {
+      "name": "安芸郡熊野町",
+      "count": 6,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 5,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3377,
+      "lng": 132.5786
+    },
+    {
+      "name": "安芸郡坂町",
+      "count": 6,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 4,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.3213,
+      "lng": 132.5076
+    },
+    {
+      "name": "豊田郡大崎上島町",
+      "count": 2,
+      "kabu": 0,
+      "yugen": 0,
+      "godo": 1,
+      "patents": 0,
+      "subsidies": 0,
+      "lat": 34.2435,
+      "lng": 132.8986
+    }
+  ],
+  "logistic_odds": {
+    "intercept": -2.15,
+    "beta_patent": 0.42,
+    "odds_ratio_patent": 1.52,
+    "beta_scale": 0.35,
+    "odds_ratio_scale": 1.42
+  }
+}

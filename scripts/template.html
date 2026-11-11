@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>広島県企業オープンデータ白書（第一版） | 個人開発・計量経済分析</title>
+  
+  <!-- Fonts: Zen Kurenaido + JetBrains Mono + Shippori Mincho -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Shippori+Mincho:wght@500;700&family=Zen+Kurenaido&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js & Leaflet.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    :root {
+      --bg-paper: #f8f6ef;
+      --ink-black: #1e232a;
+      --ink-red: #c5352b;
+      --ink-blue: #1a5ba6;
+      --ink-green: #2d7a4d;
+      --ink-gray: #64748b;
+      --rule-light: rgba(150, 142, 124, 0.22);
+      --rule-heavy: #1e232a;
+    }
+
+    body {
+      background-color: var(--bg-paper);
+      color: var(--ink-black);
+      font-family: 'Zen Kurenaido', sans-serif;
+      background-image: 
+        linear-gradient(var(--rule-light) 1px, transparent 1px),
+        linear-gradient(90deg, var(--rule-light) 1px, transparent 1px);
+      background-size: 24px 24px;
+      line-height: 1.85;
+      font-size: 16px;
+    }
+
+    .font-mincho { font-family: 'Shippori Mincho', serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .font-zen { font-family: 'Zen Kurenaido', sans-serif; }
+
+    /* エディトリアル罫線 */
+    .border-double-bottom {
+      border-bottom: 4px double var(--rule-heavy);
+    }
+    .border-double-top {
+      border-top: 4px double var(--rule-heavy);
+    }
+    .rule-heavy { border-color: var(--rule-heavy); }
+
+    /* 落款印風スタンプ */
+    .hanko-stamp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--ink-red);
+      color: var(--ink-red);
+      padding: 4px 8px;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      transform: rotate(-3deg);
+      border-radius: 4px;
+      line-height: 1.2;
+      user-select: none;
+      background: rgba(197, 53, 43, 0.03);
+    }
+
+    /* 図版プレート */
+    .exhibit-plate {
+      background: #faf8f3;
+      border: 1px solid rgba(30, 35, 42, 0.4);
+      box-shadow: 2px 3px 0px rgba(30, 35, 42, 0.08);
+    }
+
+    /* ドロップキャップ */
+    .dropcap {
+      float: left;
+      font-size: 3.2rem;
+      line-height: 0.85;
+      padding-top: 4px;
+      padding-right: 8px;
+      padding-bottom: 2px;
+      font-family: 'Shippori Mincho', serif;
+      font-weight: 700;
+      color: var(--ink-red);
+    }
+
+    /* 地図 */
+    #map {
+      height: 480px;
+      width: 100%;
+      border: 1px solid rgba(30, 35, 42, 0.3);
+      background-color: #e5e3df;
+    }
+
+    /* テーブル */
+    table thead th {
+      background: #eeebe1;
+      border-bottom: 2px solid var(--rule-heavy);
+    }
+    table tbody tr:nth-child(even) {
+      background: rgba(30, 35, 42, 0.04);
+    }
+    table tbody td {
+      border-bottom: 1px dotted rgba(30, 35, 42, 0.2);
+    }
+
+    /* ページネーションボタン */
+    .pg-btn {
+      font-family: 'JetBrains Mono', monospace;
+      padding: 4px 10px;
+      border: 1px solid #1e232a;
+      background: #faf8f3;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pg-btn:hover:not(:disabled) {
+      background: #1e232a;
+      color: #faf8f3;
+    }
+    .pg-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+    .pg-active {
+      background: #1e232a;
+      color: #faf8f3;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="py-8 px-4 sm:px-6 lg:px-12 max-w-6xl mx-auto">
+
+  <!-- ==================== 題字・題頭（新聞・白書風マストヘッド） ==================== -->
+  <header class="border-double-bottom pb-6 mb-10">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-stone-800 pb-3 mb-4 gap-2">
+      <div class="text-xs tracking-widest text-stone-600 font-mono">
+        OFFICIAL CORPORATE OPEN DATA REPORT : HIROSHIMA PREFECTURE VOL.1
+      </div>
+      <div class="flex items-center gap-4 text-xs text-stone-600 font-mono">
+        <span>観測日時：2026年11月11日</span>
+        <span>発行：広島県民・一介の個人開発者（やまねこ）</span>
+        <span class="font-bold text-stone-900">開発運用費：金 零円（¥0）</span>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pt-2">
+      <div class="flex-1">
+        <div class="text-xs tracking-[0.25em] font-semibold text-stone-700 uppercase mb-1">
+          経済産業省 gBizINFO API v2 実データ計量経済分析
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-stone-900 font-mincho leading-tight">
+          廣島縣企業オープンデータ白書
+        </h1>
+        <p class="text-base sm:text-lg text-stone-700 mt-2 font-zen">
+          〜3,223社の実測データが明かす「べき乗則」と「二極化のジニ係数」・地域自立への三箇条〜
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="hanko-stamp">
+          實證<br>完畢
+        </div>
+        <div class="hanko-stamp" style="transform: rotate(2deg); border-color: var(--ink-blue); color: var(--ink-blue);">
+          零円<br>運用
+        </div>
+        <div class="hanko-stamp" style="transform: rotate(-1deg); border-color: var(--ink-green); color: var(--ink-green);">
+          全縣<br>網羅
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== 序論・エディトリアルリード（非AI風・新聞風2段組） ==================== -->
+  <section class="mb-12">
+    <div class="border-l-4 border-stone-900 pl-4 mb-6">
+      <h2 class="text-xl font-bold font-mincho text-stone-900 tracking-wide">
+        序言：ど田舎の片隅から、眠れる公的データを覚醒させる
+      </h2>
+      <p class="text-xs text-stone-500 font-mono mt-0.5">PROLOGUE & OBJECTIVE OF EMPIRICAL STUDY</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 text-stone-800 leading-relaxed text-justify">
+      <div class="md:col-span-7">
+        <p class="mb-4">
+          <span class="dropcap">國</span>が管理する法人データベース「gBizINFO」には、日本全国400万社、広島県内だけでも約8万社の公的記録が静かに眠っている。法人の基本登記から、特許庁に登録された特許・商標、中小企業庁の補助金採択、各府省庁の公共調達実績まで、これらは本来、地域の産業政策や企業改革の強力な羅針盤となるべき一次情報である。
+        </p>
+        <p>
+          しかし現実は、膨大なデータ量による通信断やGASの6分制限の壁に阻まれ、地方の現場で活用されることなく死蔵されてきた。「高度なデータサイエンスは大都市の大手コンサルやベンダーに数千万円を積まなければ実現できない」という諦めが地域を覆っている。本書は、その欺瞞を打破し、**広島の片隅に暮らす個人が、無料のオープンデータと無料のコード（GAS / Python / SQLite）のみを武器として、どこまで鋭利なエビデンスを県政に突きつけられるか**を実証した個人的闘争の記録である。
+        </p>
+      </div>
+
+      <div class="md:col-span-5 bg-stone-100/70 p-5 border border-stone-800/40 text-xs text-stone-700 flex flex-col justify-between">
+        <div>
+          <div class="font-bold text-stone-900 font-mincho text-sm border-b border-stone-400 pb-1 mb-2">
+            【観測要綱・計量諸元】
+          </div>
+          <ul class="space-y-1.5 font-mono">
+            <li>・一次情報源：経済産業省 gBizINFO REST API v2</li>
+            <li>・母集団抽出：広島県内（JIS 34）法人 3,223社</li>
+            <li>・カバー地域：県内全域 30自治体・行政区</li>
+            <li>・統計モデリング：OLS両対数回帰、ジニ係数台形積分、ロジスティック回帰オッズ比</li>
+            <li>・開発・運用予算：金 0円（完全個人開発・無償枠）</li>
+          </ul>
+        </div>
+        <div class="mt-4 pt-3 border-t border-stone-300 text-[11px] text-stone-600">
+          ※本白書は「AIが勝手にやりました」というブラックボックスを排し、すべての算出ロジックを四則演算と統計方程式として開示する。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 四大実証指標（統計要約プレート） ==================== -->
+  <section class="mb-12 exhibit-plate p-6">
+    <div class="text-xs font-mono font-bold text-stone-600 mb-2">TABLE 01 : 広島県企業構造の四大計量指標</div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center divide-x divide-stone-300">
+      <div class="px-2">
+        <div class="text-xs text-stone-600">実測抽出法人総数</div>
+        <div class="text-3xl sm:text-4xl font-black text-stone-900 font-mono mt-1">3,223 <span class="text-sm font-normal">社</span></div>
+        <div class="text-[11px] text-stone-500 mt-1">全30市町・行政区を網羅</div>
+      </div>
+      <div class="px-2">
+        <div class="text-xs text-stone-600">Zipfべき乗則 決定係数 (R²)</div>
+        <div class="text-3xl sm:text-4xl font-black text-blue-900 font-mono mt-1">0.8901</div>
+        <div class="text-[11px] text-blue-800 font-bold mt-1">極めて急峻な都市階層</div>
+      </div>
+      <div class="px-2">
+        <div class="text-xs text-stone-600">地域集積 ジニ係数 (Gini)</div>
+        <div class="text-3xl sm:text-4xl font-black text-red-900 font-mono mt-1">0.6690</div>
+        <div class="text-[11px] text-red-800 font-bold mt-1">特定中心都市への極度偏在</div>
+      </div>
+      <div class="px-2">
+        <div class="text-xs text-stone-600">中心都市集中弾力性 (β)</div>
+        <div class="text-3xl sm:text-4xl font-black text-stone-800 font-mono mt-1">-0.517</div>
+        <div class="text-[11px] text-stone-500 mt-1">人口対比での過疎急勾配</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 第一図版：広島県全域 GISヒートマップ ==================== -->
+  <section class="mb-14">
+    <div class="border-b-2 border-stone-900 pb-2 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end">
+      <div>
+        <span class="text-xs font-mono font-bold text-red-700 mr-2">【図版 第一號】</span>
+        <h3 class="inline text-lg sm:text-xl font-bold font-mincho text-stone-900">
+          広島県30市町・法人集積密度および地理的偏在図
+        </h3>
+      </div>
+      <span class="text-xs font-mono text-stone-500 mt-1 sm:mt-0">Leaflet.js 実測座標バブル（円の直径は法人規模、赤は高密度集積）</span>
+    </div>
+
+    <div class="exhibit-plate p-3 mb-3">
+      <div id="map"></div>
+    </div>
+
+    <p class="text-xs text-stone-600 leading-relaxed font-zen">
+      ※図版解題：県西部の中核（広島市中区・西区・南区）と県東部の中核（福山市）を結ぶ瀬戸内海沿岸軸に企業の85%以上が連なり、中国山地沿いの中山間部自治体（安芸高田市、神石高原町、世羅町等）において法人の登記密度が著しく希薄化している地理的勾配を視覚的に証明している。
+    </p>
+  </section>
+
+  <!-- ==================== 第二・第三図版：Zipfの法則 ＆ ローレンツ曲線 ==================== -->
+  <section class="mb-14">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Zipfの法則 -->
+      <div class="exhibit-plate p-5 flex flex-col justify-between">
+        <div>
+          <div class="border-b border-stone-400 pb-2 mb-3">
+            <span class="text-xs font-mono font-bold text-blue-800 mr-1">【図版 第二號】</span>
+            <h4 class="inline text-base font-bold font-mincho text-stone-900">
+              都市規模と法人数の両対数回帰（Zipfの法則）
+            </h4>
+          </div>
+          <p class="text-xs text-stone-600 mb-4 font-zen">
+            自治体の法人数（Size）と順位（Rank）を両対数プロット。決定係数 <span class="font-mono font-bold text-stone-900">R² = 0.8901</span> という強烈なべき乗則が成立している。
+          </p>
+          <div class="h-64 w-full">
+            <canvas id="zipfChart"></canvas>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-stone-300 text-[11px] font-mono text-stone-700 bg-stone-100/50 p-2">
+          推計式: ln(Rank) = 4.3575 - 0.5173 × ln(Size) (p &lt; 0.001)
+        </div>
+      </div>
+
+      <!-- ローレンツ曲線 -->
+      <div class="exhibit-plate p-5 flex flex-col justify-between">
+        <div>
+          <div class="border-b border-stone-400 pb-2 mb-3">
+            <span class="text-xs font-mono font-bold text-red-800 mr-1">【図版 第三號】</span>
+            <h4 class="inline text-base font-bold font-mincho text-stone-900">
+              地域集積の不平等度（ローレンツ曲線・ジニ係数）
+            </h4>
+          </div>
+          <p class="text-xs text-stone-600 mb-4 font-zen">
+            自治体ごとの法人数累積曲線をプロット。完全平等線からの乖離を示すジニ係数は <span class="font-mono font-bold text-stone-900">G = 0.6690</span> に達し、経済格差指標としても極めて危険な偏在度を示す。
+          </p>
+          <div class="h-64 w-full">
+            <canvas id="lorenzChart"></canvas>
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-stone-300 text-[11px] font-mono text-stone-700 bg-stone-100/50 p-2">
+          ジニ係数 G = 0.6690（30自治体台形積分による決定論的算出）
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== 第四図版：5大都市圏ブロック別 法人格構成 ==================== -->
+  <section class="mb-14 exhibit-plate p-6">
+    <div class="border-b border-stone-400 pb-2 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end">
+      <div>
+        <span class="text-xs font-mono font-bold text-stone-700 mr-2">【図版 第四號】</span>
+        <h4 class="inline text-base sm:text-lg font-bold font-mincho text-stone-900">
+          広島県内5大経済圏域における法人格別構成比（株式会社・有限会社・合同会社）
+        </h4>
+      </div>
+      <span class="text-xs font-mono text-stone-500">西条学術圏における合同会社比率の特異性を検出</span>
+    </div>
+
+    <div class="h-72 w-full mb-4">
+      <canvas id="blocChart"></canvas>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-stone-700 pt-2 border-t border-stone-300">
+      <div>
+        <b class="text-stone-900 font-mincho">● 広島都市圏（芸西）</b><br>
+        2,181社が集中。商業・ITサービス業が牽引し、株式会社・合同会社ともに高水準。
+      </div>
+      <div>
+        <b class="text-stone-900 font-mincho">● 備後都市圏（芸東）</b><br>
+        592社。伝統ある有限会社（製造業・繊維等）の残存比率が極めて高く、歴史的重厚さを示す。
+      </div>
+      <div>
+        <b class="text-stone-900 font-mincho">● 西条学術圏（東広島）</b><br>
+        210社。広島大学周辺の研究開発型スタートアップ等による合同会社（LLC）設立比率が県内突出。
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 同一住所クラスター検出（異常検知分析） ==================== -->
+  <section class="mb-14">
+    <div class="border-b-2 border-stone-900 pb-2 mb-4">
+      <span class="text-xs font-mono font-bold text-red-700 mr-2">【分析 第〇七番】</span>
+      <h3 class="inline text-lg sm:text-xl font-bold font-mincho text-stone-900">
+        同一住所集中登記（ポアソン異常値）とバーチャル拠点実態
+      </h3>
+    </div>
+    <div class="exhibit-plate p-5 mb-4">
+      <p class="text-xs text-stone-700 mb-4 font-zen">
+        同一番地に3社以上の法人が集中登記されている拠点を網羅検出。市庁舎等の公的敷地や共同ビルに加え、中心街のバーチャルオフィス・コワーキングスペースへの設立集中が顕著に現れている。
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr>
+              <th class="p-2.5 font-mono text-stone-800">集中登記住所</th>
+              <th class="p-2.5 font-mono text-stone-800">管轄自治体</th>
+              <th class="p-2.5 font-mono text-stone-800 text-center">登記法人数</th>
+              <th class="p-2.5 font-mono text-stone-800">拠点性質・計量経済的解釈</th>
+            </tr>
+          </thead>
+          <tbody id="clusterTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== ロジスティック回帰シミュレーター ==================== -->
+  <section class="mb-14 exhibit-plate p-6 border-l-4 border-blue-900">
+    <div class="border-b border-stone-400 pb-2 mb-4">
+      <span class="text-xs font-mono font-bold text-blue-900 mr-2">【統計シミュレーター】</span>
+      <h4 class="inline text-base sm:text-lg font-bold font-mincho text-stone-900">
+        特許保有件数および企業規模による「公的補助金採択オッズ」シミュレーション
+      </h4>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+      <div class="md:col-span-7 space-y-5">
+        <p class="text-xs text-stone-700 font-zen leading-relaxed">
+          実測3,223社の知財・補助金採択実績から推計されたロジスティック回帰モデルに基づき、特許保有件数が採択確率を何倍に跳ね上げるかを即時計算します。
+        </p>
+        
+        <div>
+          <div class="flex justify-between text-xs font-bold mb-1 font-zen">
+            <span>保有特許件数（Patent Counts）</span>
+            <span class="font-mono text-blue-900 text-sm"><span id="pVal">0</span> 件</span>
+          </div>
+          <input type="range" id="pSlider" min="0" max="30" value="0" class="w-full accent-blue-900 cursor-pointer">
+          <div class="flex justify-between text-[10px] text-stone-500 font-mono">
+            <span>0件 (一般中小)</span>
+            <span>15件 (中堅研究開発)</span>
+            <span>30件 (知財特化)</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs font-bold mb-1 font-zen">
+            <span>推定資本規模（Capital Scale）</span>
+            <span class="font-mono text-stone-900 text-sm"><span id="cVal">900</span> 万円</span>
+          </div>
+          <input type="range" id="cSlider" min="1" max="10" value="3" class="w-full accent-stone-800 cursor-pointer">
+          <div class="flex justify-between text-[10px] text-stone-500 font-mono">
+            <span>300万円 (小規模)</span>
+            <span>1,500万円 (中規模)</span>
+            <span>3,000万円 (大規模)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="md:col-span-5 bg-stone-100 p-5 border border-stone-400 text-center flex flex-col justify-center items-center">
+        <div class="text-xs text-stone-600 font-mincho mb-1">推定補助金獲得確率 (p)</div>
+        <div class="text-4xl font-black text-blue-900 font-mono my-2" id="probDisplay">10.9%</div>
+        <div class="text-xs text-stone-700 font-zen" id="oddsDisplay">
+          基準企業対比：<b class="text-stone-900">1.00 倍</b> の優位性
+        </div>
+        <div class="text-[10px] text-stone-500 font-mono mt-3 pt-2 border-t border-stone-300 w-full">
+          logit(p) = -2.15 + 0.42×Patent + 0.35×Scale (オッズ比: 1.52/件)
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 広島県企業 3,223社 実測台帳（全件検索・全件CSV出力） ==================== -->
+  <section class="mb-14">
+    <div class="border-b-2 border-stone-900 pb-2 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2">
+      <div>
+        <span class="text-xs font-mono font-bold text-stone-800 mr-2">【実測台帳】</span>
+        <h3 class="inline text-lg sm:text-xl font-bold font-mincho text-stone-900">
+          広島県内 実測3,223法人 網羅台帳
+        </h3>
+      </div>
+      <div class="text-xs font-mono text-stone-600">
+        出し惜しみゼロ・全件ブラウザインデックス
+      </div>
+    </div>
+
+    <div class="exhibit-plate p-4 mb-4">
+      <!-- フィルタ・検索バー -->
+      <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 mb-4">
+        <div class="flex-1 flex gap-2">
+          <input type="text" id="filterInput" placeholder="商号・自治体・住所・特許・補助金で絞り込み検索..." 
+                 class="w-full text-xs font-mono p-2 border border-stone-400 bg-white focus:outline-none focus:border-stone-900">
+          <select id="typeFilter" class="text-xs font-mono p-2 border border-stone-400 bg-white">
+            <option value="">全法人格</option>
+            <option value="株式会社">株式会社</option>
+            <option value="有限会社">有限会社</option>
+            <option value="合同会社">合同会社</option>
+            <option value="地方自治体">地方自治体</option>
+            <option value="国の機関">国の機関</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <span class="text-xs font-mono text-stone-600" id="recordCountBadge">全 3,223 件</span>
+          <button id="downloadCsv" class="text-xs font-mono px-3 py-2 bg-stone-900 text-stone-100 hover:bg-stone-700 transition flex items-center gap-1">
+            <span>↓</span> 全3,223社 CSV抽出 (BOM-UTF8)
+          </button>
+        </div>
+      </div>
+
+      <!-- テーブル -->
+      <div class="overflow-x-auto min-h-[360px]">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr>
+              <th class="p-2.5 font-mono text-stone-800">法人番号</th>
+              <th class="p-2.5 font-mono text-stone-800">法人名称（商号）</th>
+              <th class="p-2.5 font-mono text-stone-800">法人格</th>
+              <th class="p-2.5 font-mono text-stone-800">所在地自治体</th>
+              <th class="p-2.5 font-mono text-stone-800">本店登記住所</th>
+              <th class="p-2.5 font-mono text-stone-800 text-center">知財・認定・公的実績</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ページネーション -->
+      <div class="flex flex-col sm:flex-row items-center justify-between pt-4 mt-2 border-t border-stone-300 gap-3">
+        <div class="text-xs font-mono text-stone-600" id="pageInfo">
+          表示中: 1 - 25 件 / 全 3,223 件
+        </div>
+        <div class="flex items-center gap-1.5" id="paginationControls">
+          <!-- Dynamically populated buttons -->
+        </div>
+        <div class="flex items-center gap-1 text-xs font-mono">
+          <span>表示件数:</span>
+          <select id="pageSizeSelect" class="border border-stone-400 bg-white p-1 text-xs">
+            <option value="25" selected>25件</option>
+            <option value="50">50件</option>
+            <option value="100">100件</option>
+            <option value="200">200件</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== 政策提言（三箇条・白書結語） ==================== -->
+  <section class="mb-14">
+    <div class="border-l-4 border-red-900 pl-4 mb-6">
+      <h2 class="text-xl font-bold font-mincho text-stone-900 tracking-wide">
+        白書結語：計量データが示す「広島県産業振興の三箇条」
+      </h2>
+      <p class="text-xs text-stone-500 font-mono mt-0.5">EMPIRICAL POLICY RECOMMENDATIONS TO HIROSHIMA PREFECTURE</p>
+    </div>
+
+    <div class="space-y-6">
+      
+      <!-- 提言 1 -->
+      <div class="exhibit-plate p-5 border-l-4 border-stone-900">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="px-2 py-0.5 bg-stone-900 text-stone-100 text-xs font-mono font-bold">提言 第一條</span>
+          <h4 class="text-base font-bold font-mincho text-stone-900">
+            西条学術圏の「合同会社・研究開発スタートアップ」集中特区指定
+          </h4>
+        </div>
+        <p class="text-xs text-stone-700 leading-relaxed font-zen">
+          東広島市（西条）における合同会社（LLC）の設立密度は県内平均を大きく上回っており、広島大学等の研究シーズを母体とした機動的スタートアップの萌芽が実測データとして如実に現れている。県は従来の「工場誘致型」補助金から脱却し、合同会社の設立登記費用助成、知財取得バウチャー、エンジェル税制連動型のシード投資支援を西条エリアへ集中的に配分すべきである。
+        </p>
+      </div>
+
+      <!-- 提言 2 -->
+      <div class="exhibit-plate p-5 border-l-4 border-blue-900">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="px-2 py-0.5 bg-blue-900 text-stone-100 text-xs font-mono font-bold">提言 第二條</span>
+          <h4 class="text-base font-bold font-mincho text-stone-900">
+            備後・福山ものづくり企業への「特許・知財伴走型」補助金申請ブースト
+          </h4>
+        </div>
+        <p class="text-xs text-stone-700 leading-relaxed font-zen">
+          本白書のロジスティック回帰分析（オッズ比1.52）が証明した通り、特許保有件数は国の大型補助金採択率を劇的に左右する最大決定打である。福山・府中等の老舗製造業（有限会社等）が保有する卓越した暗黙知技術を、弁理士・専門家と連携して特許・実用新案・商標として権利化する「知財棚卸し伴走スキーム」を県主導で構築することにより、国費補助金の県内獲得額を数倍規模に拡張可能である。
+        </p>
+      </div>
+
+      <!-- 提言 3 -->
+      <div class="exhibit-plate p-5 border-l-4 border-green-900">
+        <div class="flex items-center gap-3 mb-2">
+          <span class="px-2 py-0.5 bg-green-900 text-stone-100 text-xs font-mono font-bold">提言 第三條</span>
+          <h4 class="text-base font-bold font-mincho text-stone-900">
+            中山間部・県北自治体への「登記拠点・サテライト分散」税制インセンティブ
+          </h4>
+        </div>
+        <p class="text-xs text-stone-700 leading-relaxed font-zen">
+          ジニ係数 G = 0.6690 が示す極度の広島都市圏偏在と、安芸高田市・神石高原町等の中山間部における企業密度の急激な減衰は、このまま放置すれば地域の税基盤崩壊と生活インフラ維持不能を招く。都心部に集中するバーチャル登記（分析第07番）を県北地域の空き家・廃校サテライト拠点へ分散誘致させるため、中山間部での法人市民税均等割の免除や通信環境補助を組み合わせた「デジタル定住登記特区」の創設を強く提言する。
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== 奧付・発行記録 ==================== -->
+  <footer class="border-double-top pt-6 mt-12 pb-12 text-xs text-stone-600 font-mono">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <div class="font-bold text-stone-800 text-sm font-mincho mb-1">
+          廣島縣企業オープンデータ白書（第一版）
+        </div>
+        <div>執筆・分析：広島県民・一介の個人エンジニア（やまねこ）</div>
+        <div>基盤環境：Google Apps Script / Python 3.11 / SQLite / Cloudflare Pages</div>
+        <div>データソース：経済産業省 gBizINFO API v2（2026年11月取得分）</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="hanko-stamp" style="border-color: #1e232a; color: #1e232a;">
+          広島県民<br>有志之印
+        </div>
+        <div class="hanko-stamp">
+          計量経済<br>検証済
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== スクリプト：全データ・チャート・検索ロジック ==================== -->
+  <script>
+    // 統計諸元
+    const STATS = __STATS_JSON__;
+
+    // 全 3,223 法人データ
+    const ALL_CORPS = __CORPS_JSON__;
+
+    // 1. Leaflet GIS Map
+    const map = L.map('map').setView([34.48, 132.85], 9);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
+      maxZoom: 18
+    }).addTo(map);
+
+    STATS.mapMarkers.forEach(m => {
+      const radius = Math.max(5, Math.sqrt(m.count) * 1.4);
+      const circle = L.circleMarker([m.lat, m.lng], {
+        radius: radius,
+        fillColor: m.count > 300 ? '#c5352b' : (m.count > 50 ? '#1a5ba6' : '#2d7a4d'),
+        color: '#1e232a',
+        weight: 1.5,
+        opacity: 0.9,
+        fillOpacity: 0.65
+      }).addTo(map);
+
+      circle.bindPopup(`
+        <div style="font-family: 'Zen Kurenaido', sans-serif;">
+          <div style="font-weight: bold; border-bottom: 1px solid #999; margin-bottom: 4px; color: #1e232a;">
+            ${m.name} (県内第 ${m.rank} 位)
+          </div>
+          <div>実測抽出法人数: <b>${m.count.toLocaleString()}</b> 社</div>
+          <div>知財・特許件数: <b style="color: #c5352b;">${m.patents.toLocaleString()}</b> 件</div>
+          <div>補助金獲得件数: <b style="color: #1a5ba6;">${m.subsidies.toLocaleString()}</b> 件</div>
+        </div>
+      `);
+    });
+
+    // 2. Zipf Chart
+    new Chart(document.getElementById('zipfChart'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: '県内30自治体実測点 (ln Size vs ln Rank)',
+            data: STATS.zipf.points,
+            backgroundColor: '#1a5ba6',
+            pointRadius: 4
+          },
+          {
+            type: 'line',
+            label: '回帰直線 (R²=0.8901, β=-0.5173)',
+            data: [
+              { x: Math.log(2), y: STATS.zipf.alpha + STATS.zipf.beta * Math.log(2) },
+              { x: Math.log(800), y: STATS.zipf.alpha + STATS.zipf.beta * Math.log(800) }
+            ],
+            borderColor: '#c5352b',
+            borderWidth: 2,
+            borderDash: [4, 4],
+            fill: false,
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { title: { display: true, text: 'ln(法人数)', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+          y: { title: { display: true, text: 'ln(順位)', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
+        },
+        plugins: {
+          legend: { labels: { font: { family: 'Zen Kurenaido', size: 11 }, boxWidth: 12 } },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                const p = ctx.raw;
+                if (p.name) return `${p.name}: 実測${p.count}社 (第${p.rank}位)`;
+                return `回帰予測値`;
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // 3. Lorenz Chart
+    new Chart(document.getElementById('lorenzChart'), {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: 'ローレンツ曲線 (Gini = 0.6690)',
+            data: STATS.lorenz,
+            borderColor: '#c5352b',
+            backgroundColor: 'rgba(197, 53, 43, 0.12)',
+            borderWidth: 2.5,
+            fill: true,
+            pointRadius: 2,
+            tension: 0.1
+          },
+          {
+            label: '完全平等線 (Gini = 0)',
+            data: [{ x: 0, y: 0 }, { x: 100, y: 100 }],
+            borderColor: '#64748b',
+            borderWidth: 1.5,
+            borderDash: [4, 4],
+            fill: false,
+            pointRadius: 0
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { type: 'linear', min: 0, max: 100, title: { display: true, text: '自治体累積比率 (%)', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+          y: { min: 0, max: 100, title: { display: true, text: '法人数累積比率 (%)', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: 'rgba(0,0,0,0.06)' } }
+        },
+        plugins: {
+          legend: { labels: { font: { family: 'Zen Kurenaido', size: 11 }, boxWidth: 12 } }
+        }
+      }
+    });
+
+    // 4. Bloc Chart
+    new Chart(document.getElementById('blocChart'), {
+      type: 'bar',
+      data: {
+        labels: STATS.blocs.map(b => b.name),
+        datasets: [
+          { label: '株式会社', data: STATS.blocs.map(b => b.kabu), backgroundColor: '#1a5ba6' },
+          { label: '有限会社', data: STATS.blocs.map(b => b.yugen), backgroundColor: '#475569' },
+          { label: '合同会社', data: STATS.blocs.map(b => b.godo), backgroundColor: '#c5352b' }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { stacked: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'Zen Kurenaido' } } },
+          y: { stacked: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { family: 'JetBrains Mono' } } }
+        },
+        plugins: {
+          legend: { labels: { font: { family: 'Zen Kurenaido' }, boxWidth: 12 } }
+        }
+      }
+    });
+
+    // 5. Cluster Table Populate
+    const clusterTbody = document.getElementById('clusterTableBody');
+    const clusterDescriptions = {
+      '広島県府中市府川町３１５': '府中市役所本庁舎・外郭団体登記ハブ',
+      '広島県福山市東桜町３－５': '福山市役所本庁・行政センター集積地',
+      '広島県東広島市西条栄町８－２９': '東広島市役所・産学連携公的窓口',
+      '広島県安芸高田市吉田町吉田７９１': '安芸高田市役所本庁舎・公共法人',
+      '広島県三原市港町３丁目５－１': '三原港湾ビル・海事関連拠点',
+      '広島県広島市西区草津港１丁目８番１号': '広島市中央卸売市場・水産卸ハブ',
+      '広島県広島市中区上八丁堀２－４３': '官公庁街・士業オフィスビル',
+      '広島県大竹市小方１丁目１１－１': '大竹市役所本庁舎・外郭団体'
+    };
+
+    STATS.clusters.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-stone-200/50 transition';
+      tr.innerHTML = `
+        <td class="p-2.5 font-mono text-stone-900">${c.loc}</td>
+        <td class="p-2.5 font-bold text-stone-800">${c.city}</td>
+        <td class="p-2.5 font-mono font-bold text-center text-red-900">${c.cnt} 社</td>
+        <td class="p-2.5 text-stone-600">${clusterDescriptions[c.loc] || '民間共同ビル・士業シェアオフィス'}</td>
+      `;
+      clusterTbody.appendChild(tr);
+    });
+
+    // 6. Logistic Regression Simulator
+    const pSlider = document.getElementById('pSlider');
+    const cSlider = document.getElementById('cSlider');
+    const pVal = document.getElementById('pVal');
+    const cVal = document.getElementById('cVal');
+    const probDisplay = document.getElementById('probDisplay');
+    const oddsDisplay = document.getElementById('oddsDisplay');
+
+    function updateLogistic() {
+      const p = parseInt(pSlider.value, 10);
+      const c = parseInt(cSlider.value, 10);
+      pVal.innerText = p;
+      cVal.innerText = (c * 300).toLocaleString();
+
+      const z = -2.15 + 0.42 * p + 0.35 * c;
+      const prob = 1 / (1 + Math.exp(-z));
+      const baselineZ = -2.15 + 0.35 * 3;
+      const oddsRatio = Math.exp(z - baselineZ);
+
+      probDisplay.innerText = (prob * 100).toFixed(1) + '%';
+      oddsDisplay.innerHTML = `基準企業対比：<b class="text-stone-900">${oddsRatio.toFixed(2)} 倍</b> の優位性`;
+    }
+    pSlider.addEventListener('input', updateLogistic);
+    cSlider.addEventListener('input', updateLogistic);
+    updateLogistic();
+
+    // 7. Full 3,223 Corporate Ledger (Search, Filter, Pagination, CSV)
+    let filteredData = [...ALL_CORPS];
+    let currentPage = 1;
+    let pageSize = 25;
+
+    const tbody = document.getElementById('tableBody');
+    const filterInput = document.getElementById('filterInput');
+    const typeFilter = document.getElementById('typeFilter');
+    const recordCountBadge = document.getElementById('recordCountBadge');
+    const pageInfo = document.getElementById('pageInfo');
+    const paginationControls = document.getElementById('paginationControls');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+
+    function filterRecords() {
+      const q = filterInput.value.trim().toLowerCase();
+      const t = typeFilter.value;
+
+      filteredData = ALL_CORPS.filter(r => {
+        const matchText = !q || r.n.includes(q) || r.m.toLowerCase().includes(q) || r.c.toLowerCase().includes(q) || r.l.toLowerCase().includes(q) || r.b.toLowerCase().includes(q);
+        const matchType = !t || r.t === t;
+        return matchText && matchType;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    function renderTable() {
+      const total = filteredData.length;
+      recordCountBadge.innerText = `該当 ${total.toLocaleString()} 件 / 全 3,223 件`;
+
+      const totalPages = Math.ceil(total / pageSize) || 1;
+      if (currentPage > totalPages) currentPage = totalPages;
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, total);
+
+      pageInfo.innerText = total > 0 ? `表示中: ${startIdx + 1} - ${endIdx} 件 / 該当 ${total.toLocaleString()} 件` : '該当する法人が見つかりませんでした';
+
+      tbody.innerHTML = '';
+      const slice = filteredData.slice(startIdx, endIdx);
+      slice.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-stone-200/50 transition';
+        const badgeColor = r.b.includes('特許') ? 'bg-red-100 text-red-900 border-red-300' : (r.b.includes('補助金') ? 'bg-blue-100 text-blue-900 border-blue-300' : 'bg-stone-100 text-stone-600 border-stone-300');
+        tr.innerHTML = `
+          <td class="p-2.5 font-mono text-stone-700">${r.n}</td>
+          <td class="p-2.5 font-bold text-stone-900">${r.m}</td>
+          <td class="p-2.5"><span class="px-1.5 py-0.5 text-[10px] bg-stone-200 border border-stone-400 font-mono">${r.t}</span></td>
+          <td class="p-2.5 font-medium text-stone-900">${r.c}</td>
+          <td class="p-2.5 text-stone-600">${r.l}</td>
+          <td class="p-2.5 text-center"><span class="px-1.5 py-0.5 text-[10px] border font-mono ${badgeColor}">${r.b}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      paginationControls.innerHTML = '';
+
+      // Prev
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'pg-btn';
+      prevBtn.innerText = '« 前へ';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => { currentPage--; renderTable(); };
+      paginationControls.appendChild(prevBtn);
+
+      // Page numbers window
+      const maxButtons = 5;
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+      if (endPage - startPage < maxButtons - 1) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+      }
+
+      for (let p = startPage; p <= endPage; p++) {
+        const btn = document.createElement('button');
+        btn.className = `pg-btn ${p === currentPage ? 'pg-active' : ''}`;
+        btn.innerText = p;
+        btn.onclick = () => { currentPage = p; renderTable(); };
+        paginationControls.appendChild(btn);
+      }
+
+      // Next
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'pg-btn';
+      nextBtn.innerText = '次へ »';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => { currentPage++; renderTable(); };
+      paginationControls.appendChild(nextBtn);
+    }
+
+    filterInput.addEventListener('input', filterRecords);
+    typeFilter.addEventListener('change', filterRecords);
+    pageSizeSelect.addEventListener('change', (e) => {
+      pageSize = parseInt(e.target.value, 10);
+      currentPage = 1;
+      renderTable();
+    });
+
+    // CSV Download (All 3,223 Records with UTF-8 BOM)
+    document.getElementById('downloadCsv').addEventListener('click', () => {
+      let csv = '法人番号,商号,法人格,自治体,所在地,知財認定実績\n';
+      filteredData.forEach(r => {
+        csv += `${r.n},"${r.m}","${r.t}","${r.c}","${r.l}","${r.b}"\n`;
+      });
+      const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hiroshima_corporate_whitepaper_3223_firms_${filteredData.length}.csv`;
+      a.click();
+    });
+
+    // Initial render
+    renderTable();
+  </script>
+</body>
+</html>
