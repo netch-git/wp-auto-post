@@ -70,14 +70,15 @@ coords = {
 cur.execute('''
     SELECT city, count(*) as cnt, sum(patent_count), sum(subsidy_count)
     FROM corporations
+    WHERE city IN ({})
     GROUP BY city
     ORDER BY cnt DESC
-''')
+'''.format(','.join('?' for _ in coords.keys())), list(coords.keys()))
 city_stats = cur.fetchall()
 
 markers = []
 zipf_points = []
-total_corps = sum(r[1] for r in city_stats)
+total_corps_in_regions = sum(r[1] for r in city_stats)
 
 for rank, (city, cnt, pats, subs) in enumerate(city_stats, 1):
     lat, lng = coords.get(city, [34.3963, 132.4594])
@@ -113,7 +114,7 @@ cum_y = [0]
 cur_sum = 0
 for c in counts_sorted:
     cur_sum += c
-    cum_y.append(round(cur_sum / total_corps * 100, 2))
+    cum_y.append(round(cur_sum / total_corps_in_regions * 100, 2))
 lorenz_pts = []
 for i, y_val in enumerate(cum_y):
     x_val = round(i / len(counts_sorted) * 100, 2)
@@ -128,8 +129,9 @@ gini = round((5000 - b_area) / 5000, 4)
 cur.execute('''
     SELECT location, city, count(*) as cnt
     FROM corporations
+    WHERE location != ''
     GROUP BY location
-    HAVING cnt >= 3
+    HAVING cnt >= 4
     ORDER BY cnt DESC
     LIMIT 8
 ''')
@@ -166,7 +168,7 @@ for b_name, c_list in bloc_definitions.items():
     })
 
 stats_payload = {
-    'total_corps': total_corps,
+    'total_corps': len(all_corps),
     'zipf': {
         'alpha': round(alpha, 4),
         'beta': round(beta, 4),
@@ -179,7 +181,7 @@ stats_payload = {
     'clusters': clusters
 }
 
-print(f"Stats compiled: Zipf alpha={round(alpha,4)}, beta={round(beta,4)}, Gini={gini}")
+print(f"Stats compiled: Total {len(all_corps)} corps, Zipf alpha={round(alpha,4)}, beta={round(beta,4)}, Gini={gini}")
 
 # Serialize JSON
 corps_json_str = json.dumps(all_corps, ensure_ascii=False)
@@ -189,17 +191,19 @@ stats_json_str = json.dumps(stats_payload, ensure_ascii=False)
 with open('scripts/template.html', 'r', encoding='utf-8') as f:
     template = f.read()
 
-html_output = template.replace('__STATS_JSON__', stats_json_str).replace('__CORPS_JSON__', corps_json_str)
+# Dynamic count string replacements
+total_str = f"{len(all_corps):,}"
+template_filled = template.replace('3,223', total_str).replace('__STATS_JSON__', stats_json_str).replace('__CORPS_JSON__', corps_json_str)
 
 os.makedirs('site', exist_ok=True)
 with open('site/index.html', 'w', encoding='utf-8') as f:
-    f.write(html_output)
-print(f"Generated site/index.html ({len(html_output)/1024:.1f} KB)")
+    f.write(template_filled)
+print(f"Generated site/index.html ({len(template_filled)/1024:.1f} KB)")
 
 os.makedirs('dist', exist_ok=True)
 with open('dist/index.html', 'w', encoding='utf-8') as f:
-    f.write(html_output)
-print(f"Generated dist/index.html ({len(html_output)/1024:.1f} KB)")
+    f.write(template_filled)
+print(f"Generated dist/index.html ({len(template_filled)/1024:.1f} KB)")
 
 artifact_dir = "/home/antigravity/.gemini/jetski/brain/v1/default/jetski_remote_agents_3p/dc026dd2-9b4e-4139-9ba8-efe4b4c29953"
 if os.path.exists(artifact_dir):
