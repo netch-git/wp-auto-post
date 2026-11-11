@@ -1,0 +1,378 @@
+{
+  "updated_at": "2026-11-11 10:08:15",
+  "total_corporations": 935,
+  "total_municipalities_covered": 29,
+  "regression": {
+    "model": "ln(Rank) = alpha + beta * ln(Size)",
+    "alpha": 3.4294,
+    "beta": -0.447,
+    "r_squared": 0.8766,
+    "interpretation": "決定係数 R² = 0.8766。広島県の企業集積はべき乗則（Zipf's Law）に強く従っており、中心都市（広島市中区・福山市）への集中弾力性は 0.447 です。"
+  },
+  "gini": {
+    "coefficient": 0.6944,
+    "interpretation": "地域企業集積のジニ係数は 0.6944。中度の地域偏在を示しており、特定中心都市と中山間部の二極化が定量的に立証されています。"
+  },
+  "corporate_types": {
+    "kabushiki": 300,
+    "yugen": 300,
+    "godo": 300,
+    "others": 35
+  },
+  "cities": [
+    {
+      "city": "広島市中区",
+      "count": 222,
+      "kabu_count": 88,
+      "godo_count": 47,
+      "patents": 1,
+      "subsidies": 0
+    },
+    {
+      "city": "広島市西区",
+      "count": 137,
+      "kabu_count": 52,
+      "godo_count": 34,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "広島市南区",
+      "count": 98,
+      "kabu_count": 37,
+      "godo_count": 20,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "広島市安佐南区",
+      "count": 85,
+      "kabu_count": 26,
+      "godo_count": 20,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "広島市安佐北区",
+      "count": 78,
+      "kabu_count": 19,
+      "godo_count": 13,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "福山市",
+      "count": 61,
+      "kabu_count": 14,
+      "godo_count": 44,
+      "patents": 35,
+      "subsidies": 0
+    },
+    {
+      "city": "広島市佐伯区",
+      "count": 56,
+      "kabu_count": 24,
+      "godo_count": 13,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "広島市東区",
+      "count": 50,
+      "kabu_count": 14,
+      "godo_count": 15,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "東広島市",
+      "count": 27,
+      "kabu_count": 4,
+      "godo_count": 19,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "呉市",
+      "count": 25,
+      "kabu_count": 4,
+      "godo_count": 16,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "広島市安芸区",
+      "count": 20,
+      "kabu_count": 5,
+      "godo_count": 4,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "安芸郡府中町",
+      "count": 15,
+      "kabu_count": 2,
+      "godo_count": 12,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "廿日市市",
+      "count": 12,
+      "kabu_count": 3,
+      "godo_count": 8,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "尾道市",
+      "count": 10,
+      "kabu_count": 1,
+      "godo_count": 7,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "三原市",
+      "count": 7,
+      "kabu_count": 2,
+      "godo_count": 4,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "江田島市",
+      "count": 6,
+      "kabu_count": 2,
+      "godo_count": 4,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "三次市",
+      "count": 5,
+      "kabu_count": 0,
+      "godo_count": 5,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "安芸郡海田町",
+      "count": 4,
+      "kabu_count": 0,
+      "godo_count": 3,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "府中市",
+      "count": 3,
+      "kabu_count": 1,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "山県郡北広島町",
+      "count": 3,
+      "kabu_count": 0,
+      "godo_count": 3,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "竹原市",
+      "count": 2,
+      "kabu_count": 0,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "大竹市",
+      "count": 2,
+      "kabu_count": 1,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "豊田郡大崎上島町",
+      "count": 1,
+      "kabu_count": 0,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "神石郡神石高原町",
+      "count": 1,
+      "kabu_count": 0,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "庄原市",
+      "count": 1,
+      "kabu_count": 1,
+      "godo_count": 0,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "山県郡安芸太田町",
+      "count": 1,
+      "kabu_count": 0,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "安芸高田市",
+      "count": 1,
+      "kabu_count": 0,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "安芸郡熊野町",
+      "count": 1,
+      "kabu_count": 0,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    },
+    {
+      "city": "世羅郡世羅町",
+      "count": 1,
+      "kabu_count": 0,
+      "godo_count": 1,
+      "patents": 0,
+      "subsidies": 0
+    }
+  ],
+  "lorenz_curve": [
+    {
+      "pop": 0.0,
+      "share": 0.0
+    },
+    {
+      "pop": 3.4,
+      "share": 0.1
+    },
+    {
+      "pop": 6.9,
+      "share": 0.2
+    },
+    {
+      "pop": 10.3,
+      "share": 0.3
+    },
+    {
+      "pop": 13.8,
+      "share": 0.4
+    },
+    {
+      "pop": 17.2,
+      "share": 0.5
+    },
+    {
+      "pop": 20.7,
+      "share": 0.6
+    },
+    {
+      "pop": 24.1,
+      "share": 0.7
+    },
+    {
+      "pop": 27.6,
+      "share": 1.0
+    },
+    {
+      "pop": 31.0,
+      "share": 1.2
+    },
+    {
+      "pop": 34.5,
+      "share": 1.5
+    },
+    {
+      "pop": 37.9,
+      "share": 1.8
+    },
+    {
+      "pop": 41.4,
+      "share": 2.2
+    },
+    {
+      "pop": 44.8,
+      "share": 2.8
+    },
+    {
+      "pop": 48.3,
+      "share": 3.4
+    },
+    {
+      "pop": 51.7,
+      "share": 4.2
+    },
+    {
+      "pop": 55.2,
+      "share": 5.2
+    },
+    {
+      "pop": 58.6,
+      "share": 6.5
+    },
+    {
+      "pop": 62.1,
+      "share": 8.1
+    },
+    {
+      "pop": 65.5,
+      "share": 10.3
+    },
+    {
+      "pop": 69.0,
+      "share": 12.9
+    },
+    {
+      "pop": 72.4,
+      "share": 15.8
+    },
+    {
+      "pop": 75.9,
+      "share": 21.2
+    },
+    {
+      "pop": 79.3,
+      "share": 27.2
+    },
+    {
+      "pop": 82.8,
+      "share": 33.7
+    },
+    {
+      "pop": 86.2,
+      "share": 42.0
+    },
+    {
+      "pop": 89.7,
+      "share": 51.1
+    },
+    {
+      "pop": 93.1,
+      "share": 61.6
+    },
+    {
+      "pop": 96.6,
+      "share": 76.3
+    },
+    {
+      "pop": 100.0,
+      "share": 100.0
+    }
+  ]
+}
