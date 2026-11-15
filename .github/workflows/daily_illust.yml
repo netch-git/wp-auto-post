@@ -35,6 +35,12 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GAS_UPLOAD_URL: ${{ secrets.GAS_UPLOAD_URL }}
+          GAS_UPLOAD_TOKEN: ${{ secrets.GAS_UPLOAD_TOKEN }}
+
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID || '1Tg4GKLDqiIcbNudSvK8C6Uw_XIqdNNSi6hOZjlifKxY' }}
           DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID || '17qo8NbDC_D6Xdbz1b6oo6OxXIIBFaezK' }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
@@ -42,4 +48,13 @@ jobs:
           SIGN_LABEL: "#DailySketch"
         run: |
           python daily_illust_main.py
+
+      - name: Upload Illustration Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-illustration-${{ github.run_id }}
+          path: output_images/
+          if-no-files-found: ignore
+
 

@@ -71,10 +71,35 @@ Always feature these three distinct junior high/high school girls naturally inte
 
 
 def get_google_services():
-    """サービスアカウントでGoogle Sheets APIとDrive APIのクライアントを初期化"""
+    """Google Sheets APIとDrive APIのクライアントを初期化（ユーザーOAuth優先 / SAフォールバック）"""
+    # ルート1: ユーザーのOAuth認証情報（リフレッシュトークン方式でサービスアカウントの0GB制限を完全解消）
+    refresh_token = os.environ.get("GOOGLE_REFRESH_TOKEN")
+    client_id = os.environ.get("GOOGLE_CLIENT_ID")
+    client_secret = os.environ.get("GOOGLE_CLIENT_SECRET")
+    if refresh_token and client_id and client_secret:
+        try:
+            print("ユーザーOAuth認証情報（GOOGLE_REFRESH_TOKEN）を使用します。")
+            from google.oauth2.credentials import Credentials as UserCredentials
+            user_creds = UserCredentials(
+                token=None,
+                refresh_token=refresh_token,
+                token_uri="https://oauth2.googleapis.com/token",
+                client_id=client_id,
+                client_secret=client_secret,
+                scopes=[
+                    "https://www.googleapis.com/auth/drive",
+                    "https://www.googleapis.com/auth/spreadsheets",
+                ]
+            )
+            sheets_service = build("sheets", "v4", credentials=user_creds)
+            drive_service = build("drive", "v3", credentials=user_creds)
+            return sheets_service, drive_service
+        except Exception as e:
+            print(f"⚠️ ユーザーOAuth初期化スキップ: {e}")
+
+    # ルート2: サービスアカウント認証情報（GCP_SA_KEY）
     sa_key_str = os.environ.get("GCP_SA_KEY")
     if not sa_key_str:
-        # ローカル実行時のフォールバック探索
         local_key_paths = [
             "/tmp/gemini-ai-lab-key.json",
             os.path.expanduser("~/.gemini/gcp-keys/gemini-ai-lab-key.json"),
@@ -88,7 +113,7 @@ def get_google_services():
                 break
 
     if not sa_key_str:
-        raise ValueError("環境変数 GCP_SA_KEY が設定されていません。")
+        raise ValueError("環境変数 GCP_SA_KEY または GOOGLE_REFRESH_TOKEN が設定されていません。")
 
     sa_info = json.loads(sa_key_str)
     scopes = [
@@ -99,6 +124,7 @@ def get_google_services():
     sheets_service = build("sheets", "v4", credentials=creds)
     drive_service = build("drive", "v3", credentials=creds)
     return sheets_service, drive_service
+
 
 
 FALLBACK_NOVEMBER_SEEDS = [
@@ -308,7 +334,44 @@ def add_signature(image_bytes: bytes, signature_text: str) -> bytes:
 
 
 def upload_to_drive(drive_service, image_bytes: bytes, filename: str) -> str:
-    """Google Driveの指定フォルダに画像をアップロードしURLを返す"""
+    """
+    Google Driveの指定フォルダに画像をアップロードしURLを返す
+    Priority 1: GAS WebApp (サービスアカウントの0GB制限を完全回避し、ユーザーのマイドライブへ安全保存)
+    Priority 2: Drive API v3 (Shared Drive等)
+    """
+    gas_url = os.environ.get("GAS_UPLOAD_URL")
+    gas_token = os.environ.get("GAS_UPLOAD_TOKEN", "")
+
+    if gas_url:
+        print(f"GAS WebApp経由でDrive保存を実行中: {gas_url[:35]}...")
+        try:
+            import base64
+            import requests
+
+            b64_str = base64.b64encode(image_bytes).decode("utf-8")
+            payload = {
+                "folderId": DRIVE_FOLDER_ID,
+                "fileName": filename,
+                "mimeType": "image/png",
+                "base64Content": b64_str,
+                "token": gas_token,
+            }
+            res = requests.post(gas_url, json=payload, timeout=90, allow_redirects=True)
+            if res.status_code == 200:
+                data = res.json()
+                if data.get("status") == "success":
+                    file_id = data.get("fileId")
+                    file_url = data.get("url") or f"https://drive.google.com/file/d/{file_id}/view"
+                    print(f"アップロード成功 (GAS経由)! File ID: {file_id}")
+                    return file_url
+                else:
+                    print(f"⚠️ GAS returned error: {data.get('message')}")
+            else:
+                print(f"⚠️ GAS HTTP status: {res.status_code}")
+        except Exception as gas_err:
+            print(f"⚠️ GAS upload attempt failed: {gas_err}")
+
+    # Fallback: Drive API v3
     file_metadata = {
         "name": filename,
         "parents": [DRIVE_FOLDER_ID],
@@ -365,17 +428,29 @@ def main():
         prompt = build_prompt_with_gemini(genai_client, row_data)
         print(f"構築プロンプト:\n{prompt}\n")
 
-        # 3. Imagenで画像生成
+        # 3. 画像生成
         raw_image = generate_image_with_retry(genai_client, prompt)
 
         # 4. 右下に日付・サインを焼き込み
         sign_text = f"{TODAY_STR} {SIGN_LABEL}"
         signed_image = add_signature(raw_image, sign_text)
 
-        # 5. Google Driveに保存
+        # 5. ローカルキャッシュ保存 (GitHub Actions Artifact用)
         filename = f"{TODAY_STR}_month{CURRENT_MONTH}_{int(time.time())}.png"
-        drive_url = upload_to_drive(drive_service, signed_image, filename)
-        print(f"アップロード完了: {drive_url}")
+        os.makedirs("output_images", exist_ok=True)
+        local_filepath = os.path.join("output_images", filename)
+        with open(local_filepath, "wb") as f:
+            f.write(signed_image)
+        print(f"ローカル保存完了: {local_filepath}")
+
+        # 6. Google Driveに保存 (GAS優先 / 0GB制限回避)
+        try:
+            drive_url = upload_to_drive(drive_service, signed_image, filename)
+            print(f"Driveアップロード完了: {drive_url}")
+        except Exception as drive_err:
+            print(f"⚠️ Driveアップロード失敗（Artifactに保存済み）: {drive_err}")
+            drive_url = f"GitHub Artifact: {filename}"
+
 
         # 6. ログシートに記録（万が一のAPI未有効時も警告で安全継続）
         try:

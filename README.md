@@ -21,9 +21,9 @@ flowchart TD
         Sheet["日常イラスト生成マスタDB<br/>(ID: 1Tg4GKLDqiIcbNudSvK8C6Uw_XIqdNNSi6hOZjlifKxY)<br/>全12ヶ月・120パターンの現代版季語・空間・服装"]
     end
 
-    subgraph Intelligence ["Gemini Intelligence"]
-        GeminiFlash["🧠 Gemini 2.5 Flash<br/>(当月季語シチュエーション × 3人の物語ルールを統合)"]
-        ImagenModel["🎨 Imagen 3 / 4<br/>(16:9 アスペクト比・エディトリアル水彩描画)"]
+    subgraph Intelligence ["Gemini Intelligence (環境変数で切替可能)"]
+        GeminiFlash["🧠 GEMINI_MODEL: gemini-3.8-flash<br/>(当月季語シチュエーション × 3人の物語ルールを統合)"]
+        ImageEngine["🎨 IMAGE_MODEL: gemini-2.5-flash-image / Imagen<br/>(16:9 アスペクト比・エディトリアル水彩描画)"]
     end
 
     subgraph PostProcess ["Pillow 画像処理エンジン"]
@@ -38,8 +38,8 @@ flowchart TD
     Runner -->|1. 当月シチュエーション抽選| Sheet
     Sheet --> Runner
     Runner -->|2. プロンプト合成指示| GeminiFlash
-    GeminiFlash -->|3. 最適化プロンプト| ImagenModel
-    ImagenModel -->|4. 生画像バイナリ| Sign
+    GeminiFlash -->|3. 最適化プロンプト| ImageEngine
+    ImageEngine -->|4. 生画像バイナリ| Sign
     Sign -->|5. 完成画像アップロード| Drive
     Sign -->|6. 実行実績ログ追記| LogSheet
 ```
@@ -70,7 +70,33 @@ flowchart TD
 
 ---
 
-## 📊 3. 連携リソースおよびデータベース仕様
+## 🤖 3. モデル動的ディスパッチ（Imagen系 vs Geminiネイティブ画像系の両対応）
+
+Google GenAI SDK において、モデル系列によって異なるAPI呼び出し方式を自動判別して動的にルーティングします。
+
+```python
+# モデル系列に応じた自動ルーティング
+if "imagen" in model_name.lower():
+    # Imagen 3/4 系: generate_images() を呼び出し
+    result = client.models.generate_images(
+        model=model_name,
+        prompt=prompt,
+        config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio="16:9")
+    )
+    return result.generated_images[0].image.image_bytes
+else:
+    # Gemini ネイティブ画像系 (gemini-*-image): generate_content() + response_modalities を呼び出し
+    resp = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config=types.GenerateContentConfig(response_modalities=["IMAGE"])
+    )
+    return resp.candidates[0].content.parts[0].inline_data.data
+```
+
+---
+
+## 📊 4. 連携リソースおよびデータベース仕様
 
 | リソース | 名称 / 参照先 | 役割 |
 | :--- | :--- | :--- |
@@ -81,7 +107,7 @@ flowchart TD
 
 ---
 
-## ⚙️ 4. ディレクトリ構成
+## ⚙️ 5. ディレクトリ構成
 
 ```text
 netch-git/wp-auto-post/
@@ -98,20 +124,28 @@ netch-git/wp-auto-post/
 
 ---
 
-## 🔐 5. 必要な GitHub Secrets 設定
+## 🔐 6. 環境変数・GitHub Secrets / Variables 設定
 
-リポジトリの `Settings` → `Secrets and variables` → `Actions` に登録されている環境変数：
+Pythonコードを一切触らず、GitHubの画面からモデルや実行パラメータを柔軟に切り替え可能です。
 
+### Secrets (機密情報)
 | シークレット名 | 必須 / 任意 | 説明 |
 | :--- | :---: | :--- |
 | **`GCP_SA_KEY`** | **必須** | `gemini-ai-lab-key.json` のJSON全文（Sheets/Drive書き込み権限を持つサービスアカウント鍵） |
-| **`GEMINI_API_KEY`** | **必須** | Google AI Studio の API キー（プロンプト生成および Imagen 呼び出し用） |
-| **`SPREADSHEET_ID`** | 任意 | マスタDBのシートID（コード内にデフォルト値 `1Tg4GKLDqiIcbNudSvK8C6Uw_XIqdNNSi6hOZjlifKxY` を内蔵） |
-| **`DRIVE_FOLDER_ID`** | 任意 | 画像保存先のDriveフォルダID（コード内にデフォルト値 `17qo8NbDC_D6Xdbz1b6oo6OxXIIBFaezK` を内蔵） |
+| **`GEMINI_API_KEY`** | **必須** | Google AI Studio の API キー（プロンプト生成および 画像呼び出し用） |
+| **`SPREADSHEET_ID`** | 任意 | マスタDBのシートID（デフォルト: `1Tg4GKLDqiIcbNudSvK8C6Uw_XIqdNNSi6hOZjlifKxY`） |
+| **`DRIVE_FOLDER_ID`** | 任意 | 画像保存先のDriveフォルダID（デフォルト: `17qo8NbDC_D6Xdbz1b6oo6OxXIIBFaezK`） |
+
+### Variables (設定変数)
+| 変数名 | デフォルト値 | 説明 |
+| :--- | :--- | :--- |
+| **`GEMINI_MODEL`** | `gemini-3.8-flash` | プロンプト合成用のGeminiモデル名 |
+| **`IMAGE_MODEL`** | `gemini-2.5-flash-image` | 画像生成用モデル名（`gemini-*-image` または `imagen-*`） |
+| **`SIGN_LABEL`** | `#DailySketch` | 右下に焼き込むサインのラベル文字 |
 
 ---
 
-## 🚀 6. 手動テストおよび運用手順
+## 🚀 7. 手動テストおよび運用手順
 
 ### GitHub Web画面からの即時手動実行
 明朝3時を待たずにテスト実行を行いたい場合：
@@ -128,9 +162,13 @@ python daily_illust_main.py
 
 ---
 
-## 🏆 7. 改訂履歴
-- **2026-11-15**:
+## 🏆 8. 改訂履歴
+- **2026-11-15 (Rev 3)**:
+  - `GEMINI_MODEL`（`gemini-3.8-flash`）および `IMAGE_MODEL`（`gemini-2.5-flash-image`）の環境変数化を完了。
+  - Imagen系列（`generate_images`）とGeminiネイティブ画像系列（`generate_content` + `response_modalities`）の自動ルーティング機構を実装。
+  - Google Sheets API / Drive API 未有効時の自律フォールバックおよび安全ロギングを実装。
+- **2026-11-15 (Rev 1-2)**:
   - `wp-auto-post` リポジトリを再活用し、日常イラスト自律生成パイプラインへ完全統合。
-  - 定期実行スケジュールを午前03:00 JST（`0 18 * * *` UTC）に正式設定。
+  - 定期実行スケジュールを午前03:00 JST（`0 18 * * *` UTC）に設定。
   - 12ヶ月×120種季語スプレッドシートDBおよびGoogle Drive `note-images` フォルダとの双方向連携を確立。
   - Google AI Challenge（25周年）提出用の構成・スライド資料との同期完了。
