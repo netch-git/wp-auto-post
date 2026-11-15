@@ -37,7 +37,9 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID || '1Tg4GKLDqiIcbNudSvK8C6Uw_XIqdNNSi6hOZjlifKxY' }}
           DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID || '17qo8NbDC_D6Xdbz1b6oo6OxXIIBFaezK' }}
-          IMAGEN_MODEL: "imagen-3.0-generate-002"
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
+          IMAGE_MODEL: ${{ vars.IMAGE_MODEL || 'gemini-2.5-flash-image' }}
           SIGN_LABEL: "#DailySketch"
         run: |
           python daily_illust_main.py
+
