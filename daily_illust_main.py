@@ -208,25 +208,58 @@ IMAGE_MODELS_TRY = [
 
 
 def generate_image_with_retry(genai_client: genai.Client, prompt: str) -> bytes:
-    """Gemini Image API (generate_content) を呼び出して画像を生成（モデルフォールバック＆リトライ付き）"""
+    """
+    画像生成実行関数（Imagen系 / Gemini Native Image系の両方式に完全自動対応）
+    ・imagen-*系: client.models.generate_images(prompt=..., config=GenerateImagesConfig(aspect_ratio="16:9"))
+    ・gemini-*-image系: client.models.generate_content(contents=..., config=GenerateContentConfig(response_modalities=["IMAGE"]))
+    """
+    seen_models = []
     for model_name in IMAGE_MODELS_TRY:
+        if model_name in seen_models:
+            continue
+        seen_models.append(model_name)
+
         for attempt in range(1, 3):
             try:
                 print(f"画像生成を実行中 [モデル: {model_name}] (試行 {attempt}/2)...")
-                resp = genai_client.models.generate_content(
-                    model=model_name,
-                    contents=prompt,
-                )
-                if resp and resp.candidates and resp.candidates[0].content.parts:
-                    for part in resp.candidates[0].content.parts:
-                        if part.inline_data and part.inline_data.data:
-                            print(f"画像生成成功! [モデル: {model_name}] (サイズ: {len(part.inline_data.data)} bytes)")
-                            return part.inline_data.data
+
+                # パターンA: imagen-* 系モデル (generate_images)
+                if "imagen" in model_name.lower():
+                    result = genai_client.models.generate_images(
+                        model=model_name,
+                        prompt=prompt,
+                        config=types.GenerateImagesConfig(
+                            number_of_images=1,
+                            aspect_ratio="16:9",
+                            output_mime_type="image/png",
+                        ),
+                    )
+                    if result.generated_images:
+                        img_bytes = result.generated_images[0].image.image_bytes
+                        print(f"画像生成成功 (generate_images)! [モデル: {model_name}] (サイズ: {len(img_bytes)} bytes)")
+                        return img_bytes
+
+                # パターンB: gemini-*-image 系モデル (generate_content with response_modalities=["IMAGE"])
+                else:
+                    resp = genai_client.models.generate_content(
+                        model=model_name,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            response_modalities=["IMAGE"],
+                        ),
+                    )
+                    if resp and resp.candidates and resp.candidates[0].content.parts:
+                        for part in resp.candidates[0].content.parts:
+                            if part.inline_data and part.inline_data.data:
+                                print(f"画像生成成功 (generate_content)! [モデル: {model_name}] (サイズ: {len(part.inline_data.data)} bytes)")
+                                return part.inline_data.data
+
             except Exception as e:
                 print(f"モデル {model_name} (試行 {attempt}) 失敗: {e}")
                 time.sleep(2 * attempt)
 
-    raise RuntimeError("すべての画像モデルでの生成が失敗しました。")
+    raise RuntimeError("すべての画像モデル・API方式での生成が失敗しました。")
+
 
 
 
